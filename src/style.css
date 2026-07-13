@@ -1,0 +1,17 @@
+html, body, #app {
+  height: 100%;
+  margin: 0;
+}
+#app {
+  display: flex;
+  flex-direction: column;
+}
+.app-layout {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+}
+.app-main {
+  flex: 1;
+  overflow-y: auto;
+}
