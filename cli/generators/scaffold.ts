@@ -2,6 +2,7 @@ import { join } from 'path'
 import { writeFileTree, writeJson, writeText, readJson, pathExists, readText } from '../utils/fs'
 import { serverIndexTemplate, serverConfigTemplate, dbPluginTemplate } from '../templates/project'
 import { schemaTemplate, typesTemplate, modelTemplate, serviceTemplate, routesTemplate, indexTemplate } from '../templates/module'
+import { feClientTemplate, feAppTemplate, feHomeTemplate } from '../templates/fe'
 
 export async function scaffoldProject(targetDir: string, projectName: string): Promise<void> {
   const files: Record<string, string> = {}
@@ -116,6 +117,38 @@ DB_PATH=server/data/todos.db
 NODE_ENV=development
 `
 
+  files['src/main.tsx'] = `import '@stisla/vanilla/dist/stisla.css'
+import '@stisla/vanilla'
+import './style.css'
+import { render } from 'preact'
+import { App } from './app'
+
+render(<App />, document.getElementById('app')!)
+`
+
+  files['src/style.css'] = `html, body, #app {
+  height: 100%;
+  margin: 0;
+}
+#app {
+  display: flex;
+  flex-direction: column;
+}
+.app-layout {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+}
+.app-main {
+  flex: 1;
+  overflow-y: auto;
+}
+`
+
+  files['src/api/client.ts'] = feClientTemplate()
+  files['src/pages/Home.tsx'] = feHomeTemplate()
+  files['src/App.tsx'] = feAppTemplate()
+
   await writeFileTree(targetDir, files)
 
   const viteConfigPath = join(targetDir, 'vite.config.ts')
@@ -174,6 +207,9 @@ NODE_ENV=development
     'drizzle-orm': '^0.45.2',
     'drizzle-typebox': '^0.3.3',
     elysia: '^1.4.29',
+    wouter: '^3.10.0',
+    '@tanstack/preact-query': '^5.101.2',
+    '@stisla/vanilla': '^3.0.0',
   }
   pkg.dependencies = { ...deps, ...(pkg.dependencies as Record<string, string> || {}) }
 
