@@ -1,104 +1,69 @@
-import { useState } from 'preact/hooks'
-import preactLogo from './assets/preact.svg'
-import viteLogo from './assets/vite.svg'
-import heroImg from './assets/hero.png'
-import './app.css'
+import { QueryClient, QueryClientProvider } from '@tanstack/preact-query'
+import { Route, Switch, Link, useRoute } from 'wouter'
+import { Home } from './pages/Home'
+// @prelysia-imports
+
+const queryClient = new QueryClient()
+
+function SidebarLink({ href, children }: { href: string; children: preact.ComponentChildren }) {
+  const [isActive] = useRoute(href === '/' ? '/' : href + '/:rest*')
+  return (
+    <div class="sidebar__item">
+      <Link href={href} class="sidebar__button" aria-current={isActive ? 'page' : undefined}>
+        <span>{children}</span>
+      </Link>
+    </div>
+  )
+}
 
 export function App() {
-  const [count, setCount] = useState(0)
-
   return (
-    <>
-      <section id="center">
-        <div class="hero">
-          <img src={heroImg} class="base" width="170" height="179" alt="" />
-          <img src={preactLogo} class="framework" alt="Preact logo" />
-          <img src={viteLogo} class="vite" alt="Vite logo" />
-        </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/app.tsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          type="button"
-          class="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
+    <QueryClientProvider client={queryClient}>
+      <nav class="navbar" data-stisla-navbar>
+        <a class="navbar__brand" href="/">prelysia</a>
+        <button class="navbar__toggle" data-stisla-navbar-toggle aria-label="Toggle navigation">
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 5h14M3 10h14M3 15h14" />
+          </svg>
         </button>
-      </section>
-
-      <div class="ticks"></div>
-
-      <section id="next-steps">
-        <div id="docs">
-          <svg class="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img class="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://preactjs.com/" target="_blank">
-                <img class="button-icon" src={preactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
+        <div class="navbar__menu">
+          <div class="navbar__nav" />
         </div>
-        <div id="social">
-          <svg class="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg class="button-icon" role="presentation" aria-hidden="true">
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg class="button-icon" role="presentation" aria-hidden="true">
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg class="button-icon" role="presentation" aria-hidden="true">
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg class="button-icon" role="presentation" aria-hidden="true">
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
-
-      <div class="ticks"></div>
-      <section id="spacer"></section>
-    </>
+      </nav>
+      <div class="app-layout">
+        <aside class="sidebar" data-stisla-sidebar>
+          <div class="sidebar__header">
+            <a class="sidebar__brand" href="/">
+              <span>prelysia</span>
+            </a>
+          </div>
+          <div class="sidebar__content">
+            <div class="sidebar__group">
+              <div class="sidebar__group-title">Main</div>
+              <div class="sidebar__list">
+                <SidebarLink href="/">Home</SidebarLink>
+              </div>
+            </div>
+            <div class="sidebar__group">
+              <div class="sidebar__group-title">Modules</div>
+              <div class="sidebar__list">
+                {/* @prelysia-sidebar */}
+              </div>
+            </div>
+          </div>
+          <div class="sidebar__footer">
+            <button data-stisla-sidebar-toggle="collapse" class="button button--ghost button--sm" style="width:100%">
+              Collapse
+            </button>
+          </div>
+        </aside>
+        <main class="page app-main">
+          <Switch>
+            <Route path="/" component={Home} />
+            {/* @prelysia-routes */}
+          </Switch>
+        </main>
+      </div>
+    </QueryClientProvider>
   )
 }
