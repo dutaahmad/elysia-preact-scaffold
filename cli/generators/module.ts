@@ -1,5 +1,5 @@
 import { input, select, confirm } from '@inquirer/prompts'
-import { toKebabCase } from '../utils/name'
+import { toKebabCase, toPascalCase } from '../utils/name'
 import { writeFileTree, readText, writeText, pathExists } from '../utils/fs'
 import {
   schemaTemplate,
@@ -10,6 +10,12 @@ import {
   indexTemplate,
   type FieldDef,
 } from '../templates/module'
+import {
+  feTypesTemplate,
+  feApiTemplate,
+  feListPageTemplate,
+  feFormPageTemplate,
+} from '../templates/fe'
 import { join } from 'path'
 
 async function collectFields(): Promise<FieldDef[]> {
@@ -106,32 +112,94 @@ async function updateServerIndex(serverPath: string, moduleName: string, camelNa
   return true
 }
 
-export async function generateModule(basePath: string, featureName: string): Promise<void> {
+async function updateAppRoutes(basePath: string, moduleName: string, pascalName: string): Promise<boolean> {
+  const appPath = join(basePath, 'src', 'App.tsx')
+  if (!pathExists(appPath)) return false
+
+  const content = await readText(appPath)
+  const lines = content.split('\n')
+
+  const importLine = `import { ${pascalName}List, ${pascalName}Form } from './pages/${moduleName}'`
+
+  const routeLines = [
+    `          <Route path="/${moduleName}" component={${pascalName}List} />`,
+    `          <Route path="/${moduleName}/new" component={${pascalName}Form} />`,
+    `          <Route path="/${moduleName}/:id/edit" component={${pascalName}Form} />`,
+  ]
+
+  if (content.includes(importLine)) return false
+
+  const importMarkerIdx = lines.findIndex((l) => l.includes('@prelysia-imports'))
+  if (importMarkerIdx >= 0) {
+    lines.splice(importMarkerIdx + 1, 0, importLine)
+  }
+
+  const routesMarkerIdx = lines.findIndex((l) => l.includes('@prelysia-routes'))
+  if (routesMarkerIdx >= 0) {
+    lines.splice(routesMarkerIdx, 0, ...routeLines)
+  }
+
+  if (importMarkerIdx < 0 && routesMarkerIdx < 0) return false
+
+  await writeText(appPath, lines.join('\n'))
+  return true
+}
+
+export async function generateModule(
+  basePath: string,
+  featureName: string,
+  options?: { feOnly?: boolean },
+): Promise<void> {
   const moduleName = toKebabCase(featureName)
   const serverPath = join(basePath, 'server')
   const moduleDir = join('modules', moduleName)
   const fields = await collectFields()
 
-  const files: Record<string, string> = {
-    [join(moduleDir, 'schema.ts')]: schemaTemplate(moduleName, fields),
-    [join(moduleDir, 'types.ts')]: typesTemplate(moduleName),
-    [join(moduleDir, 'model.ts')]: modelTemplate(moduleName, fields),
-    [join(moduleDir, 'service.ts')]: serviceTemplate(moduleName),
-    [join(moduleDir, 'routes.ts')]: routesTemplate(moduleName),
-    [join(moduleDir, 'index.ts')]: indexTemplate(moduleName),
-  }
-
-  await writeFileTree(serverPath, files)
-
   const camelName = moduleName.replace(/-([a-z])/g, (_, c) => c.toUpperCase())
+  const pascalName = toPascalCase(moduleName)
 
-  const schemaOk = await updateDbSchema(serverPath, moduleName)
-  const indexOk = await updateServerIndex(serverPath, moduleName, camelName)
+  // Server files
+  if (!options?.feOnly) {
+    const files: Record<string, string> = {
+      [join(moduleDir, 'schema.ts')]: schemaTemplate(moduleName, fields),
+      [join(moduleDir, 'types.ts')]: typesTemplate(moduleName),
+      [join(moduleDir, 'model.ts')]: modelTemplate(moduleName, fields),
+      [join(moduleDir, 'service.ts')]: serviceTemplate(moduleName),
+      [join(moduleDir, 'routes.ts')]: routesTemplate(moduleName),
+      [join(moduleDir, 'index.ts')]: indexTemplate(moduleName),
+    }
+    await writeFileTree(serverPath, files)
 
-  console.log(`\nGenerated module: ${moduleName}`)
-  for (const [rel] of Object.entries(files)) {
-    console.log(`  \u2713 ${join(serverPath, rel)}`)
+    await updateDbSchema(serverPath, moduleName)
+    await updateServerIndex(serverPath, moduleName, camelName)
   }
-  if (schemaOk) console.log('  \u2713 Updated server/db/schema.ts')
-  if (indexOk) console.log('  \u2713 Updated server/index.ts')
+
+  // FE files
+  const feFiles: Record<string, string> = {
+    [`src/types/${moduleName}.ts`]: feTypesTemplate(moduleName, fields),
+    [`src/api/${moduleName}.ts`]: feApiTemplate(moduleName, fields),
+    [`src/pages/${moduleName}/List.tsx`]: feListPageTemplate(moduleName, fields),
+    [`src/pages/${moduleName}/Form.tsx`]: feFormPageTemplate(moduleName, fields),
+  }
+  await writeFileTree(basePath, feFiles)
+
+  await updateAppRoutes(basePath, moduleName, pascalName)
+
+  // Console output
+  if (!options?.feOnly) {
+    console.log(`\nGenerated module: ${moduleName}`)
+    for (const [rel] of Object.entries(files)) {
+      console.log(`  \u2713 ${join(serverPath, rel)}`)
+    }
+  } else {
+    console.log(`\nGenerated FE assets: ${moduleName}`)
+  }
+  for (const [rel] of Object.entries(feFiles)) {
+    console.log(`  \u2713 ${join(basePath, rel)}`)
+  }
+  if (!options?.feOnly) {
+    console.log('  \u2713 Updated server/db/schema.ts')
+    console.log('  \u2713 Updated server/index.ts')
+  }
+  console.log('  \u2713 Updated src/App.tsx')
 }

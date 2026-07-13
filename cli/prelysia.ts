@@ -34,6 +34,7 @@ program
   .command('feat')
   .description('Generate a new module with CRUD routes')
   .argument('<name>', 'Feature name (kebab-case)')
+  .option('--fe-only', 'Only generate FE assets (types, api, pages)')
   .action(featAction)
 
 program.parse()
