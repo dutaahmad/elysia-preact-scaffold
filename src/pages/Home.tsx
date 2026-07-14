@@ -1,3 +1,5 @@
+import { CheckCircleIcon } from '@phosphor-icons/react'
+
 export function Home() {
   return (
     <div class="page">
@@ -23,9 +25,9 @@ export function Home() {
             </div>
             <div class="card__body">
               <ol style="margin:0;padding-inline-start:1.25rem">
-                <li><code>prelysia feat categories</code> — add a Categories module</li>
-                <li><code>bun run dev</code> — start the dev server</li>
-                <li>Navigate to <a href="/categories">/categories</a> to see the CRUD UI</li>
+                <li><CheckCircleIcon size={20} /> <code>prelysia feat categories</code> — add a Categories module</li>
+                <li><CheckCircleIcon size={20} /> <code>bun run dev</code> — start the dev server</li>
+                <li><CheckCircleIcon size={20} /> Navigate to <a href="/categories">/categories</a> to see the CRUD UI</li>
               </ol>
             </div>
           </div>

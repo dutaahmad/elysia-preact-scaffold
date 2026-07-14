@@ -1,6 +1,9 @@
+import { CaretLeftIcon, ParagraphIcon, HouseIcon, ListIcon } from '@phosphor-icons/react'
+import { cn } from './lib/utils'
 import { QueryClient, QueryClientProvider } from '@tanstack/preact-query'
 import { Route, Switch, Link, useRoute } from 'wouter'
 import { Home } from './pages/Home'
+import { ThemeToggle } from './components/ThemeToggle'
 // @prelysia-imports
 
 const queryClient = new QueryClient()
@@ -8,54 +11,69 @@ const queryClient = new QueryClient()
 function SidebarLink({ href, children }: { href: string; children: preact.ComponentChildren }) {
   const [isActive] = useRoute(href === '/' ? '/' : href + '/:rest*')
   return (
-    <div class="sidebar__item">
-      <Link href={href} class="sidebar__button" aria-current={isActive ? 'page' : undefined}>
+    <li class="sidebar__item">
+      <Link
+        href={href}
+        class={cn('sidebar__button', isActive && 'sidebar__button--active')}
+        aria-current={isActive ? 'page' : undefined}
+      >
         <span>{children}</span>
       </Link>
-    </div>
+    </li>
   )
 }
 
 export function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <nav class="navbar" data-stisla-navbar>
-        <a class="navbar__brand" href="/">prelysia</a>
+      <nav class="navbar border-b border-border" data-stisla-navbar>
+        <a class="navbar__brand flex gap-0 p-0" href="/">
+          <ParagraphIcon size={20} />
+          <p>relysia</p>
+        </a>
         <button class="navbar__toggle" data-stisla-navbar-toggle aria-label="Toggle navigation">
-          Menu
+          <ListIcon size={20} />
         </button>
         <div class="navbar__menu">
-          <div class="navbar__nav" />
+          <div class="navbar__nav w-full bg-primary">
+              <ThemeToggle />
+            </div>
         </div>
       </nav>
       <div class="app-layout">
-        <aside class="sidebar" data-stisla-sidebar>
-          <div class="sidebar__header">
+        <aside class="sidebar border-r border-border" id="sidebar" data-stisla-sidebar>
+          {/*<div class="sidebar__header">
             <a class="sidebar__brand" href="/">
-              <span>prelysia</span>
+
             </a>
-          </div>
+          </div>*/}
           <div class="sidebar__content">
-            <div class="sidebar__group">
-              <div class="sidebar__group-title">Main</div>
-              <div class="sidebar__list">
-                <SidebarLink href="/">Home</SidebarLink>
-              </div>
-            </div>
-            <div class="sidebar__group">
-              <div class="sidebar__group-title">Modules</div>
-              <div class="sidebar__list">
-                {/* @prelysia-sidebar */}
+            <div class="sidebar__menu">
+              {/*<div class="sidebar__group">
+                <div class="sidebar__group-title">Main</div>
+                <ul class="sidebar__list">
+                  <SidebarLink href="/">
+                    <HouseIcon size={20} />
+                  </SidebarLink>
+                </ul>
+              </div>*/}
+              <div class="sidebar__group">
+                <div class="sidebar__group-title">Modules</div>
+                <ul class="sidebar__list">
+                  {/* @prelysia-sidebar */}
+                  {/* Icon: generated links include a Cube icon — swap it for a module-specific icon */}
+                </ul>
               </div>
             </div>
           </div>
           <div class="sidebar__footer">
-            <button data-stisla-sidebar-toggle="collapse" class="button button--ghost button--sm" style="width:100%">
-              Collapse
+            <button data-stisla-sidebar-toggle="collapse" class="sidebar__button" aria-controls="sidebar">
+              <CaretLeftIcon size={16} />
+              <span>Collapse</span>
             </button>
           </div>
         </aside>
-        <main class="page app-main">
+        <main class="page app-main p-6">
           <Switch>
             <Route path="/" component={Home} />
             {/* @prelysia-routes */}

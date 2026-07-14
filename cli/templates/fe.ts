@@ -79,7 +79,8 @@ export function feListPageTemplate(name: string, fields: FieldDef[]): string {
   const headerCells = fields.map((f) => `            <th>${f.name}</th>`).join('\n')
   const dataCells = fields.map((f) => `              <td>{item.${f.name}}</td>`).join('\n')
 
-  return `import { useQuery, useMutation, useQueryClient } from '@tanstack/preact-query'
+  return `import { Plus, Pencil, Trash } from '@phosphor-icons/react'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/preact-query'
 import { Link } from 'wouter'
 import { ${camel}Api } from '../../api/${name}'
 import type { ${Pascal} } from '../../types/${name}'
@@ -107,38 +108,43 @@ export function ${Pascal}List() {
           <h1 class="page__title">${Pascal}</h1>
         </div>
         <div class="page__action">
-          <Link href="/${name}/new" class="button button--primary">Add New</Link>
+          <Link href="/${name}/new" class="button button--primary"><Plus size={16} /> Add New</Link>
         </div>
       </div>
-      <div class="card">
-        {data?.length === 0 ? (
-          <div class="card__body">No ${name} found.</div>
-        ) : (
-          <table class="table table--hover table--striped">
-            <thead>
-              <tr>
+      <div class="page__body">
+        <section class="page__section">
+          <div class="card">
+            {data?.length === 0 ? (
+              <div class="card__body">No ${name} found.</div>
+            ) : (
+              <table class="table table--hover table--striped">
+                <thead>
+                  <tr>
 ${headerCells}
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {data?.map((item: ${Pascal}) => (
-                <tr key={item.id}>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {data?.map((item: ${Pascal}) => (
+                    <tr key={item.id}>
 ${dataCells}
-                  <td>
-                    <Link href={\`/${name}/\${item.id}/edit\`} class="button button--ghost button--sm">Edit</Link>
-                    <button
-                      class="button button--danger button--soft button--sm"
-                      onClick={() => deleteMutation.mutate(item.id)}
-                    >
-                      Delete
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
+                      <td>
+                        <Link href={\`/${name}/\${item.id}/edit\`} class="button button--ghost button--sm"><Pencil size={16} /> Edit</Link>
+                        <button
+                          class="button button--danger button--soft button--sm"
+                          onClick={() => deleteMutation.mutate(item.id)}
+                        >
+                          <Trash size={16} />
+                          Delete
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </div>
+        </section>
       </div>
     </div>
   )
@@ -198,7 +204,8 @@ export function feFormPageTemplate(name: string, fields: FieldDef[]): string {
     })
     .join(',\n')
 
-  return `import { useState, useEffect } from 'preact/hooks'
+  return `import { X, Check } from '@phosphor-icons/react'
+import { useState, useEffect } from 'preact/hooks'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/preact-query'
 import { useRoute, useLocation } from 'wouter'
 import { ${camel}Api } from '../../api/${name}'
@@ -248,20 +255,23 @@ ${initialFields},
           <h1 class="page__title">{isEdit ? 'Edit' : 'New'} ${Pascal}</h1>
         </div>
         <div class="page__action">
-          <a href="/${name}" class="button button--neutral">Cancel</a>
+          <a href="/${name}" class="button button--neutral"><X size={16} /> Cancel</a>
         </div>
       </div>
-      <div class="card">
-        <form onSubmit={handleSubmit}>
-          <div class="card__body">
+      <div class="page__body">
+        <section class="page__section">
+          <form class="card" onSubmit={handleSubmit}>
+            <div class="card__body">
 ${formFields}
-          </div>
-          <div class="card__footer">
-            <button type="submit" class="button button--primary" aria-busy={mutation.isPending || undefined}>
-              {isEdit ? 'Update' : 'Create'}
-            </button>
-          </div>
-        </form>
+            </div>
+            <div class="card__footer">
+              <button type="submit" class="button button--primary" aria-busy={mutation.isPending || undefined}>
+                <Check size={20} />
+                {isEdit ? 'Update' : 'Create'}
+              </button>
+            </div>
+          </form>
+        </section>
       </div>
     </div>
   )
@@ -270,9 +280,12 @@ ${formFields}
 }
 
 export function feAppTemplate(): string {
-  return `import { QueryClient, QueryClientProvider } from '@tanstack/preact-query'
+  return `import { House, Cube, CaretLeft, List, Sun, Moon } from '@phosphor-icons/react'
+import { cn } from './lib/utils'
+import { QueryClient, QueryClientProvider } from '@tanstack/preact-query'
 import { Route, Switch, Link, useRoute } from 'wouter'
 import { Home } from './pages/Home'
+import { useTheme } from './hooks/useTheme'
 // @prelysia-imports
 
 const queryClient = new QueryClient()
@@ -280,50 +293,65 @@ const queryClient = new QueryClient()
 function SidebarLink({ href, children }: { href: string; children: preact.ComponentChildren }) {
   const [isActive] = useRoute(href === '/' ? '/' : href + '/:rest*')
   return (
-    <div class="sidebar__item">
-      <Link href={href} class="sidebar__button" aria-current={isActive ? 'page' : undefined}>
+    <li class="sidebar__item">
+      <Link
+        href={href}
+        class={cn('sidebar__button', isActive && 'sidebar__button--active')}
+        aria-current={isActive ? 'page' : undefined}
+      >
         <span>{children}</span>
       </Link>
-    </div>
+    </li>
   )
 }
 
 export function App() {
+  const [theme, toggle] = useTheme()
   return (
     <QueryClientProvider client={queryClient}>
       <nav class="navbar" data-stisla-navbar>
         <a class="navbar__brand" href="/">prelysia</a>
         <button class="navbar__toggle" data-stisla-navbar-toggle aria-label="Toggle navigation">
-          Menu
+          <List size={20} />
         </button>
         <div class="navbar__menu">
-          <div class="navbar__nav" />
-        </div>
+          <div class="navbar__nav">
+            <button class={cn('button', 'button--ghost', 'button--sm')} onClick={toggle} aria-label="Toggle theme">
+              {theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
+            </button>
+          </div>
       </nav>
       <div class="app-layout">
-        <aside class="sidebar" data-stisla-sidebar>
+        <aside class="sidebar" id="sidebar" data-stisla-sidebar>
           <div class="sidebar__header">
             <a class="sidebar__brand" href="/">
               <span>prelysia</span>
             </a>
           </div>
           <div class="sidebar__content">
-            <div class="sidebar__group">
-              <div class="sidebar__group-title">Main</div>
-              <div class="sidebar__list">
-                <SidebarLink href="/">Home</SidebarLink>
+            <div class="sidebar__menu">
+              <div class="sidebar__group">
+                <div class="sidebar__group-title">Main</div>
+                <ul class="sidebar__list">
+                  <SidebarLink href="/">
+                    <House size={20} />
+                    Home
+                  </SidebarLink>
+                </ul>
               </div>
-            </div>
-            <div class="sidebar__group">
-              <div class="sidebar__group-title">Modules</div>
-              <div class="sidebar__list">
-                {/* @prelysia-sidebar */}
+              <div class="sidebar__group">
+                <div class="sidebar__group-title">Modules</div>
+                <ul class="sidebar__list">
+                  {/* @prelysia-sidebar */}
+                  {/* Icon: generated links include a Cube icon — swap it for a module-specific icon */}
+                </ul>
               </div>
             </div>
           </div>
           <div class="sidebar__footer">
-            <button data-stisla-sidebar-toggle="collapse" class="button button--ghost button--sm" style="width:100%">
-              Collapse
+            <button data-stisla-sidebar-toggle="collapse" class="sidebar__button" aria-controls="sidebar">
+              <CaretLeft size={16} />
+              <span>Collapse</span>
             </button>
           </div>
         </aside>
@@ -341,7 +369,8 @@ export function App() {
 }
 
 export function feHomeTemplate(): string {
-  return `import { Link } from 'wouter'
+  return `import { Rocket, CheckCircle } from '@phosphor-icons/react'
+import { Link } from 'wouter'
 
 export function Home() {
   return (
@@ -350,6 +379,9 @@ export function Home() {
         <div class="page__headline">
           <h1 class="page__title">Dashboard</h1>
           <p class="page__description">Welcome to your app</p>
+        </div>
+        <div class="page__action">
+          <Rocket size={32} />
         </div>
       </div>
       <div class="page__body">
@@ -368,9 +400,9 @@ export function Home() {
             </div>
             <div class="card__body">
               <ol style="margin:0;padding-inline-start:1.25rem">
-                <li><code>prelysia feat categories</code> — add a Categories module</li>
-                <li><code>bun run dev</code> — start the dev server</li>
-                <li>Navigate to <a href="/categories">/categories</a> to see the CRUD UI</li>
+                <li><CheckCircle size={20} /> <code>prelysia feat categories</code> — add a Categories module</li>
+                <li><CheckCircle size={20} /> <code>bun run dev</code> — start the dev server</li>
+                <li><CheckCircle size={20} /> Navigate to <a href="/categories">/categories</a> to see the CRUD UI</li>
               </ol>
             </div>
           </div>

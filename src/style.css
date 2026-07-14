@@ -1,3 +1,8 @@
+@import "tailwindcss";
+@import "@stisla/style/theme.css";
+@import "@stisla/style/components.css";
+@source "./src";
+
 html, body, #app {
   height: 100%;
   margin: 0;
@@ -15,3 +20,4 @@ html, body, #app {
   flex: 1;
   overflow-y: auto;
 }
+

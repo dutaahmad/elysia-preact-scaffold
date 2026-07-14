@@ -4,9 +4,12 @@
 
 - **Runtime**: Bun (v1.3+)
 - **Backend**: Elysia 1.4, modular monolith (plugins per domain)
-- **Frontend**: Preact 10 + Vite 8 (SPA)
+- **Frontend**: Preact 10 + Vite 8 (SPA), **Stisla** CSS (`.navbar`, `.sidebar`, `.card`, `.page`, `.table`, `.field`, `.button`) loaded with `@ts-expect-error` (no type declarations)
+- **FE Routing/Data**: wouter (`Route`, `Switch`, `Link`, `useRoute`) + `@tanstack/preact-query` (`QueryClientProvider`)
 - **Database**: Bun SQLite + Drizzle ORM, `drizzle-typebox` for validation
-- **No test framework, no linter configured yet**
+- **CLI**: `prelysia` (Commander.js + `@inquirer/prompts`)
+- **Language**: TypeScript 6.0, `erasableSyntaxOnly: true` — no enums, no parameter properties, no namespaces
+- **No linter, no test framework**
 
 ## Entrypoints
 
@@ -14,29 +17,15 @@
 |-------|-------|--------|
 | Backend | `server/index.ts` | `tsconfig.server.json` (not included in root tsconfig references) |
 | Frontend | `src/main.tsx` | `tsconfig.app.json` (referenced from root `tsconfig.json`) |
-| DB Schema | `server/db/schema.ts` (re-exports modules) | `drizzle.config.ts` |
+| DB Schema | `server/db/schema.ts` (re-exports module schemas) | `drizzle.config.ts` |
+| CLI | `cli/prelysia.ts` | No tsconfig — runs via `#!/usr/bin/env bun` shebang |
 
 ## Architecture
 
-```
-server/
-  index.ts          — compose plugins + optional static serving in production
-  config.ts         — reads PORT, DB_PATH, NODE_ENV from process.env (Bun auto-loads .env)
-  plugins/
-    db.ts           — global Elysia plugin, decorates .db via bun:sqlite + drizzle
-  modules/
-    <domain>/       — each module is a self-contained bounded context
-      schema.ts     — Drizzle table definition (sqliteTable)
-      types.ts      — InferSelectModel / InferInsertModel types
-      model.ts      — drizzle-typebox → Elysia.t validation models
-      service.ts    — pure CRUD, injected with db via factory
-      routes.ts     — Elysia route handlers
-      index.ts      — public plugin API (exports the Elysia plugin)
-  db/
-    schema.ts       — re-exports all module schemas (for drizzle-kit discovery)
-    model.ts        — singleton spread utility for table schemas
-    utils.ts        — spread() / spreads() from Elysia Drizzle docs
-```
+- **Server**: each domain = `server/modules/<name>/` with 6 files — `schema.ts` (Drizzle table), `types.ts` (InferSelectModel/InsertModel), `model.ts` (drizzle-typebox → Elysia.t validation), `service.ts` (CRUD factory, `(db) => ({...})`), `routes.ts` (Elysia routes), `index.ts` (Elysia plugin — prefix + routes). Register in `server/index.ts` via `.use(module)`, add re-export to `server/db/schema.ts`.
+- **Frontend**: generated module FE assets go to `src/types/<module>.ts`, `src/api/<module>.ts`, `src/pages/<module>/List.tsx`, `src/pages/<module>/Form.tsx`. `src/App.tsx` uses marker comments for codegen: `// @prelysia-imports` (import insertion), `{/* @prelysia-sidebar */}` (sidebar link), `{/* @prelysia-routes */}` (Route components). **Never remove these markers.**
+- **DB**: global Elysia decoration — every route handler gets `db` on context. Decorated in `server/plugins/db.ts` as `.as('global')`.
+- **Preact compat**: `tsconfig.app.json` aliases `react` → `preact/compat`, uses `"jsx": "react-jsx"`, `"jsxImportSource": "preact"`.
 
 ## Commands
 
@@ -46,24 +35,28 @@ bun run dev:fe       # vite only
 bun run dev:be       # elysia only with --watch
 bun run build        # vite build only (into dist/)
 bun run preview      # NODE_ENV=production bun run server/index.ts (SPA + API)
-bun run db:migrate   # drizzle-kit push (needs @libsql/client in devDeps)
-bun run db:generate  # drizzle-kit generate
+bun run db:migrate   # drizzle-kit push (needs @libsql/client in devDeps, uses bun:sqlite at runtime)
+bun run db:generate  # drizzle-kit generate (creates SQL files in drizzle/)
 bun run db:studio    # drizzle-kit studio
+bun cli/prelysia.ts  # CLI entry (use `bun cli/prelysia.ts --help`)
 ```
 
 ## Dev Workflow
 
-- Vite on :5173 proxies `/api/*` → `http://localhost:3000` (configured in `vite.config.ts`)
-- Elysia on :3000 handles API routes directly
-- In production (`preview`), Elysia also serves `dist/` via `@elysia/static` with `indexHTML: true` (SPA fallback)
-- First time setup: `bun run db:migrate` to create tables
+- Vite on :5173 proxies `/api/*` → `http://localhost:3000` (configured in `vite.config.ts`).
+- Elysia on :3000 handles API routes; in production also serves `dist/` via `@elysia/static` with `indexHTML: true`.
+- First time setup: `bun run db:migrate` to create tables. Or `bun cli/prelysia.ts init` for full scaffold.
+- Add CRUD modules: `bun cli/prelysia.ts feat <kebab-name>` (interactive field prompts, generates all 6 server files + FE assets + updates index.ts + App.tsx). Use `--fe-only` to skip server-side generation.
+- `cli/` code is NOT typechecked by any tsconfig — run `bun cli/prelysia.ts` to verify.
+- `.env` vars: `PORT`, `DB_PATH`, `NODE_ENV` (auto-loaded by Bun, no dotenv). `.env.example` is unrelated cruft (ClickUp tokens), ignore it.
 
 ## Key Conventions
 
-- Each new domain = new folder in `server/modules/<name>/` with all 6 files (schema, types, model, service, routes, index)
-- Register in `server/index.ts` via `.use(module)` and add re-export to `server/db/schema.ts`
-- DB connection is a global Elysia decoration — every route gets `db` on context
-- `verbatimModuleSyntax: true` — use `import type` for type-only imports
-- `drizzle-typebox` intermediate variable required: declare `const _x = createInsertSchema(...)` first, then reference it in `t.Omit(...)` to avoid infinite type instantiation
-- `.env` is auto-loaded by Bun (no dotenv)
-- SQLite database file at `server/data/todos.db` (gitignored)
+- `verbatimModuleSyntax: true` — use `import type` for type-only imports.
+- `drizzle-typebox` intermediate variable required: `const _x = createInsertSchema(...)`, then reference in `t.Omit(...)` to avoid infinite type instantiation.
+- Service is a factory function called in routes: `derive({ as: 'scoped' }, ({ db }) => ({ svc: createService(db) }))`.
+- All generated module routes use `BunSQLiteDatabase` type for db parameter.
+- Wouter routes use `href` prop, not `to`. Use `useLocation` for navigation, `useRoute` for path matching.
+- TanStack Query: `useQuery` + `useMutation` + `useQueryClient` from `@tanstack/preact-query`.
+- Stisla CSS classes: `.button--primary`, `.button--danger`, `.button--ghost`, `.button--sm`, `.card`, `.card__body`, `.page`, `.page__header`, `.table`, `.field`, `.input`.
+- `index.html` title is `preact-app` (unlikely to be right for your project — update it).

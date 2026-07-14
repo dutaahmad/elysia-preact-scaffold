@@ -121,7 +121,10 @@ async function updateAppFile(basePath: string, moduleName: string, pascalName: s
 
   const importLine = `import { ${pascalName}List, ${pascalName}Form } from './pages/${moduleName}'`
 
-  const sidebarItem = `                <SidebarLink href="/${moduleName}">${pascalName}</SidebarLink>`
+  const sidebarItem = `                <SidebarLink href="/${moduleName}">
+                  <Cube size={20} /> {/* Icon: swap Cube for a module-specific icon from @phosphor-icons/react */}
+                  ${pascalName}
+                </SidebarLink>`
 
   const routeLines = [
     `          <Route path="/${moduleName}" component={${pascalName}List} />`,

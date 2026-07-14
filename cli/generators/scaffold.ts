@@ -117,8 +117,7 @@ DB_PATH=server/data/todos.db
 NODE_ENV=development
 `
 
-  files['src/main.tsx'] = `import '@stisla/vanilla/dist/stisla.css'
-// @ts-expect-error - no type declarations for vanilla JS package
+  files['src/main.tsx'] = `// @ts-expect-error - no type declarations for vanilla JS package
 import '@stisla/vanilla'
 import './style.css'
 import { render } from 'preact'
@@ -127,7 +126,12 @@ import { App } from './app'
 render(<App />, document.getElementById('app')!)
 `
 
-  files['src/style.css'] = `html, body, #app {
+  files['src/style.css'] = `@import "tailwindcss";
+@import "@stisla/style/theme.css";
+@import "@stisla/style/components.css";
+@source "./src";
+
+html, body, #app {
   height: 100%;
   margin: 0;
 }
@@ -144,8 +148,55 @@ render(<App />, document.getElementById('app')!)
   flex: 1;
   overflow-y: auto;
 }
+
 `
 
+  files['src/hooks/useTheme.ts'] = `import { useState, useEffect } from 'preact/hooks'
+
+const STORAGE_KEY = 'stisla-theme'
+
+function getInitialTheme(): string {
+  const stored = localStorage.getItem(STORAGE_KEY)
+  if (stored === 'dark' || stored === 'light') return stored
+  return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
+}
+
+export function useTheme(): [string, () => void] {
+  const [theme, setTheme] = useState(getInitialTheme)
+
+  useEffect(() => {
+    document.documentElement.dataset.theme = theme
+  }, [theme])
+
+  useEffect(() => {
+    const mq = window.matchMedia('(prefers-color-scheme: dark)')
+    const handler = (e: MediaQueryListEvent) => {
+      if (!localStorage.getItem(STORAGE_KEY)) {
+        setTheme(e.matches ? 'dark' : 'light')
+      }
+    }
+    mq.addEventListener('change', handler)
+    return () => mq.removeEventListener('change', handler)
+  }, [])
+
+  const toggle = () => {
+    setTheme((prev) => {
+      const next = prev === 'dark' ? 'light' : 'dark'
+      localStorage.setItem(STORAGE_KEY, next)
+      return next
+    })
+  }
+
+  return [theme, toggle]
+}
+`
+  files['src/lib/utils.ts'] = `import { type ClassValue, clsx } from 'clsx'
+import { twMerge } from 'tailwind-merge'
+
+export function cn(...inputs: ClassValue[]) {
+  return twMerge(clsx(inputs))
+}
+`
   files['src/api/client.ts'] = feClientTemplate()
   files['src/pages/Home.tsx'] = feHomeTemplate()
   files['src/App.tsx'] = feAppTemplate()
@@ -210,15 +261,19 @@ render(<App />, document.getElementById('app')!)
     elysia: '^1.4.29',
     wouter: '^3.10.0',
     '@tanstack/preact-query': '^5.101.2',
+    '@phosphor-icons/react': '^2.1.7',
+    '@stisla/css': '^3.0.1',
     '@stisla/vanilla': '^3.0.0',
   }
   pkg.dependencies = { ...deps, ...(pkg.dependencies as Record<string, string> || {}) }
 
   const devDeps: Record<string, string> = {
     '@libsql/client': '^0.17.4',
+    '@tailwindcss/vite': '^4.1.7',
     'drizzle-kit': '^0.31.10',
     '@types/bun': '^1.3.14',
     concurrently: '^10.0.3',
+    tailwindcss: '^4.1.7',
   }
   pkg.devDependencies = { ...(pkg.devDependencies as Record<string, string> || {}), ...devDeps }
 
