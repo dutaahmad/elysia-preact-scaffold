@@ -17,6 +17,9 @@ dist-ssr
 *.db-shm
 drizzle/
 
+# OpenCode project config
+.opencode/node_modules
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
@@ -27,3 +30,6 @@ drizzle/
 *.njsproj
 *.sln
 *.sw?
+
+# Daily reports
+docs/reports/
