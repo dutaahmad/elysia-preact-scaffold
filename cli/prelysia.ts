@@ -4,12 +4,14 @@ import { Command } from 'commander'
 import { initAction } from './commands/init'
 import { featAction } from './commands/feat'
 import { readFileSync } from 'fs'
-import { join } from 'path'
+import { join, dirname } from 'path'
+import { fileURLToPath } from 'url'
 
 function getVersion(): string {
   try {
+    const __filename = fileURLToPath(import.meta.url)
     const pkg = JSON.parse(
-      readFileSync(join(__dirname, '..', 'package.json'), 'utf-8'),
+      readFileSync(join(dirname(__filename), '..', 'package.json'), 'utf-8'),
     )
     return pkg.version || '0.0.0'
   } catch {

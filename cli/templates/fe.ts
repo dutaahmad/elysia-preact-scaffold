@@ -79,7 +79,7 @@ export function feListPageTemplate(name: string, fields: FieldDef[]): string {
   const headerCells = fields.map((f) => `            <th>${f.name}</th>`).join('\n')
   const dataCells = fields.map((f) => `              <td>{item.${f.name}}</td>`).join('\n')
 
-  return `import { Plus, Pencil, Trash } from '@phosphor-icons/react'
+  return `import { PlusIcon, PencilIcon, TrashIcon } from '@phosphor-icons/react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/preact-query'
 import { Link } from 'wouter'
 import { ${camel}Api } from '../../api/${name}'
@@ -108,7 +108,7 @@ export function ${Pascal}List() {
           <h1 class="page__title">${Pascal}</h1>
         </div>
         <div class="page__action">
-          <Link href="/${name}/new" class="button button--primary"><Plus size={16} /> Add New</Link>
+          <Link href="/${name}/new" class="button button--primary"><PlusIcon size={16} /> Add New</Link>
         </div>
       </div>
       <div class="page__body">
@@ -129,12 +129,12 @@ ${headerCells}
                     <tr key={item.id}>
 ${dataCells}
                       <td>
-                        <Link href={\`/${name}/\${item.id}/edit\`} class="button button--ghost button--sm"><Pencil size={16} /> Edit</Link>
+                        <Link href={\`/${name}/\${item.id}/edit\`} class="button button--ghost button--sm"><PencilIcon size={16} /> Edit</Link>
                         <button
                           class="button button--danger button--soft button--sm"
                           onClick={() => deleteMutation.mutate(item.id)}
                         >
-                          <Trash size={16} />
+                          <TrashIcon size={16} />
                           Delete
                         </button>
                       </td>
@@ -204,7 +204,7 @@ export function feFormPageTemplate(name: string, fields: FieldDef[]): string {
     })
     .join(',\n')
 
-  return `import { X, Check } from '@phosphor-icons/react'
+  return `import { XIcon, CheckIcon } from '@phosphor-icons/react'
 import { useState, useEffect } from 'preact/hooks'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/preact-query'
 import { useRoute, useLocation } from 'wouter'
@@ -255,7 +255,7 @@ ${initialFields},
           <h1 class="page__title">{isEdit ? 'Edit' : 'New'} ${Pascal}</h1>
         </div>
         <div class="page__action">
-          <a href="/${name}" class="button button--neutral"><X size={16} /> Cancel</a>
+          <a href="/${name}" class="button button--neutral"><XIcon size={16} /> Cancel</a>
         </div>
       </div>
       <div class="page__body">
@@ -266,7 +266,7 @@ ${formFields}
             </div>
             <div class="card__footer">
               <button type="submit" class="button button--primary" aria-busy={mutation.isPending || undefined}>
-                <Check size={20} />
+                <CheckIcon size={20} />
                 {isEdit ? 'Update' : 'Create'}
               </button>
             </div>
@@ -280,7 +280,7 @@ ${formFields}
 }
 
 export function feAppTemplate(): string {
-  return `import { House, Cube, CaretLeft, List } from '@phosphor-icons/react'
+  return `import { HouseIcon, CubeIcon, CaretLeftIcon, ListIcon } from '@phosphor-icons/react'
 import { cn } from './lib/utils'
 import { QueryClient, QueryClientProvider } from '@tanstack/preact-query'
 import { Route, Switch, Link, useRoute } from 'wouter'
@@ -311,7 +311,7 @@ export function App() {
       <nav class="navbar" data-stisla-navbar>
         <a class="navbar__brand" href="/">prelysia</a>
         <button class="navbar__toggle" data-stisla-navbar-toggle aria-label="Toggle navigation">
-          <List size={20} />
+          <ListIcon size={20} />
         </button>
         <div class="navbar__menu">
           <div class="navbar__nav">
@@ -331,7 +331,7 @@ export function App() {
                 <div class="sidebar__group-title">Main</div>
                 <ul class="sidebar__list">
                   <SidebarLink href="/">
-                    <House size={20} />
+                    <HouseIcon size={20} />
                     Home
                   </SidebarLink>
                 </ul>
@@ -347,7 +347,7 @@ export function App() {
           </div>
           <div class="sidebar__footer">
             <button data-stisla-sidebar-toggle="collapse" class="sidebar__button" aria-controls="sidebar">
-              <CaretLeft size={16} />
+              <CaretLeftIcon size={16} />
               <span>Collapse</span>
             </button>
           </div>
@@ -366,7 +366,7 @@ export function App() {
 }
 
 export function feHomeTemplate(): string {
-  return `import { Rocket, CheckCircle } from '@phosphor-icons/react'
+  return `import { RocketIcon, CheckCircleIcon } from '@phosphor-icons/react'
 import { Link } from 'wouter'
 
 export function Home() {
@@ -378,7 +378,7 @@ export function Home() {
           <p class="page__description">Welcome to your app</p>
         </div>
         <div class="page__action">
-          <Rocket size={32} />
+          <RocketIcon size={32} />
         </div>
       </div>
       <div class="page__body">
@@ -397,9 +397,9 @@ export function Home() {
             </div>
             <div class="card__body">
               <ol style="margin:0;padding-inline-start:1.25rem">
-                <li><CheckCircle size={20} /> <code>prelysia feat categories</code> — add a Categories module</li>
-                <li><CheckCircle size={20} /> <code>bun run dev</code> — start the dev server</li>
-                <li><CheckCircle size={20} /> Navigate to <a href="/categories">/categories</a> to see the CRUD UI</li>
+                <li><CheckCircleIcon size={20} /> <code>prelysia feat categories</code> — add a Categories module</li>
+                <li><CheckCircleIcon size={20} /> <code>bun run dev</code> — start the dev server</li>
+                <li><CheckCircleIcon size={20} /> Navigate to <a href="/categories">/categories</a> to see the CRUD UI</li>
               </ol>
             </div>
           </div>

@@ -47,11 +47,5 @@ sqlite.exec('PRAGMA journal_mode = WAL')
 export const dbPlugin = new Elysia({ name: 'db' })
   .decorate('db', drizzle(sqlite))
   .as('global')
-
-declare module 'elysia' {
-  interface ElysiaContext {
-    db: BunSQLiteDatabase
-  }
-}
 `
 }

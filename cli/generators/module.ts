@@ -90,6 +90,7 @@ async function updateServerIndex(serverPath: string, moduleName: string, camelNa
   const useLine = `  .use(${camelName}Module)`
 
   if (content.includes(importLine)) return false
+  if (content.includes(useLine)) return false
 
   const lastImportIdx = lines.reduce((max, line, i) => {
     return line.startsWith('import ') ? i : max
@@ -122,7 +123,7 @@ async function updateAppFile(basePath: string, moduleName: string, pascalName: s
   const importLine = `import { ${pascalName}List, ${pascalName}Form } from './pages/${moduleName}'`
 
   const sidebarItem = `                <SidebarLink href="/${moduleName}">
-                  <Cube size={20} /> {/* Icon: swap Cube for a module-specific icon from @phosphor-icons/react */}
+                  <CubeIcon size={20} /> {/* Icon: swap CubeIcon for a module-specific icon from @phosphor-icons/react */}
                   ${pascalName}
                 </SidebarLink>`
 

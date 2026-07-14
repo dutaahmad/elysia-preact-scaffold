@@ -75,15 +75,16 @@ export function modelTemplate(tableName: string, fields: FieldDef[]): string {
   const overrideFields = fields
     .filter((f) => f.type === 'string' && f.required)
     .map((f) => `    ${f.name}: t.String({ minLength: 1 }),`)
-    .join('\n')
 
-  const overrideBlock = overrideFields ? `,\n  {\n${overrideFields}  }` : ''
+  const schemaArgs = overrideFields.length > 0
+    ? `${tableName},\n  {\n${overrideFields.join('\n')}  }`
+    : tableName
 
   return `import { Elysia, t } from 'elysia'
 import { createInsertSchema, createSelectSchema } from 'drizzle-typebox'
 import { ${tableName} } from './schema'
 
-const _create${Pascal} = createInsertSchema(${tableName}${overrideBlock ? `\n  ${overrideBlock}\n)` : ')'}
+const _create${Pascal} = createInsertSchema(${schemaArgs})
 const _${Pascal} = createSelectSchema(${tableName})
 
 export const ${tableName}Model = new Elysia({ name: '${tableName}-model' }).model({
