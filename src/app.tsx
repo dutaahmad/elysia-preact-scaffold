@@ -35,7 +35,7 @@ export function App() {
           <ListIcon size={20} />
         </button>
         <div class="navbar__menu">
-          <div class="navbar__nav w-full bg-primary">
+          <div class="navbar__nav w-full md:flex md:flex-row md:justify-end">
               <ThemeToggle />
             </div>
         </div>

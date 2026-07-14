@@ -280,12 +280,12 @@ ${formFields}
 }
 
 export function feAppTemplate(): string {
-  return `import { House, Cube, CaretLeft, List, Sun, Moon } from '@phosphor-icons/react'
+  return `import { House, Cube, CaretLeft, List } from '@phosphor-icons/react'
 import { cn } from './lib/utils'
 import { QueryClient, QueryClientProvider } from '@tanstack/preact-query'
 import { Route, Switch, Link, useRoute } from 'wouter'
 import { Home } from './pages/Home'
-import { useTheme } from './hooks/useTheme'
+import { ThemeToggle } from './components/ThemeToggle'
 // @prelysia-imports
 
 const queryClient = new QueryClient()
@@ -306,7 +306,6 @@ function SidebarLink({ href, children }: { href: string; children: preact.Compon
 }
 
 export function App() {
-  const [theme, toggle] = useTheme()
   return (
     <QueryClientProvider client={queryClient}>
       <nav class="navbar" data-stisla-navbar>
@@ -316,9 +315,7 @@ export function App() {
         </button>
         <div class="navbar__menu">
           <div class="navbar__nav">
-            <button class={cn('button', 'button--ghost', 'button--sm')} onClick={toggle} aria-label="Toggle theme">
-              {theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
-            </button>
+            <ThemeToggle />
           </div>
       </nav>
       <div class="app-layout">
