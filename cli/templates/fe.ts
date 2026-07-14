@@ -271,7 +271,7 @@ ${formFields}
 
 export function feAppTemplate(): string {
   return `import { QueryClient, QueryClientProvider } from '@tanstack/preact-query'
-import { Router, Route, Switch, Link, useRoute } from 'wouter'
+import { Route, Switch, Link, useRoute } from 'wouter'
 import { Home } from './pages/Home'
 // @prelysia-imports
 
@@ -294,9 +294,7 @@ export function App() {
       <nav class="navbar" data-stisla-navbar>
         <a class="navbar__brand" href="/">prelysia</a>
         <button class="navbar__toggle" data-stisla-navbar-toggle aria-label="Toggle navigation">
-          <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M3 5h14M3 10h14M3 15h14" />
-          </svg>
+          Menu
         </button>
         <div class="navbar__menu">
           <div class="navbar__nav" />
