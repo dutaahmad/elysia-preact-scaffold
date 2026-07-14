@@ -112,7 +112,7 @@ async function updateServerIndex(serverPath: string, moduleName: string, camelNa
   return true
 }
 
-async function updateAppRoutes(basePath: string, moduleName: string, pascalName: string): Promise<boolean> {
+async function updateAppFile(basePath: string, moduleName: string, pascalName: string): Promise<boolean> {
   const appPath = join(basePath, 'src', 'App.tsx')
   if (!pathExists(appPath)) return false
 
@@ -120,6 +120,8 @@ async function updateAppRoutes(basePath: string, moduleName: string, pascalName:
   const lines = content.split('\n')
 
   const importLine = `import { ${pascalName}List, ${pascalName}Form } from './pages/${moduleName}'`
+
+  const sidebarItem = `                <SidebarLink href="/${moduleName}">${pascalName}</SidebarLink>`
 
   const routeLines = [
     `          <Route path="/${moduleName}" component={${pascalName}List} />`,
@@ -129,17 +131,27 @@ async function updateAppRoutes(basePath: string, moduleName: string, pascalName:
 
   if (content.includes(importLine)) return false
 
+  let modified = false
+
   const importMarkerIdx = lines.findIndex((l) => l.includes('@prelysia-imports'))
   if (importMarkerIdx >= 0) {
     lines.splice(importMarkerIdx + 1, 0, importLine)
+    modified = true
+  }
+
+  const sidebarMarkerIdx = lines.findIndex((l) => l.includes('@prelysia-sidebar'))
+  if (sidebarMarkerIdx >= 0) {
+    lines.splice(sidebarMarkerIdx, 0, sidebarItem)
+    modified = true
   }
 
   const routesMarkerIdx = lines.findIndex((l) => l.includes('@prelysia-routes'))
   if (routesMarkerIdx >= 0) {
     lines.splice(routesMarkerIdx, 0, ...routeLines)
+    modified = true
   }
 
-  if (importMarkerIdx < 0 && routesMarkerIdx < 0) return false
+  if (!modified) return false
 
   await writeText(appPath, lines.join('\n'))
   return true
@@ -183,7 +195,7 @@ export async function generateModule(
   }
   await writeFileTree(basePath, feFiles)
 
-  await updateAppRoutes(basePath, moduleName, pascalName)
+  await updateAppFile(basePath, moduleName, pascalName)
 
   // Console output
   if (!options?.feOnly) {
