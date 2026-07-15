@@ -409,13 +409,15 @@ export function Home() {
     </div>
   )
 }
+`
+}
 
 export function feMainTemplate(): string {
   return `// @ts-expect-error - no type declarations for vanilla JS package
 import '@stisla/vanilla'
 import './style.css'
 import { render } from 'preact'
-import { App } from './app'
+import { App } from './App'
 
 render(<App />, document.getElementById('app')!)
 `
@@ -488,6 +490,7 @@ export function useTheme(): [string, () => void] {
   return [theme, toggle]
 }
 `
+}
 
 export function feThemeToggleTemplate(): string {
   return `import { SunIcon, MoonIcon } from '@phosphor-icons/react'
@@ -504,6 +507,7 @@ export function ThemeToggle() {
   )
 }
 `
+}
 
 export function feUtilsTemplate(): string {
   return `import { type ClassValue, clsx } from 'clsx'
