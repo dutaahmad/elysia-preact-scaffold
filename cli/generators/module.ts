@@ -102,10 +102,10 @@ async function updateServerIndex(serverPath: string, moduleName: string, camelNa
     lines.splice(lastImportIdx + 1, 0, importLine)
   }
 
-  const listenIdx = lines.findIndex((l) => l.includes('.listen('))
-  const staticIdx = lines.findIndex((l) => l.includes('staticPlugin'))
-
-  const insertIdx = staticIdx >= 0 ? staticIdx : listenIdx >= 0 ? listenIdx : -1
+  const lastUseIdx = lines.reduce((max, line, i) => {
+    return line.trimStart().startsWith('.use(') ? i : max
+  }, -1)
+  const insertIdx = lastUseIdx >= 0 ? lastUseIdx + 1 : -1
 
   if (insertIdx > 0) {
     lines.splice(insertIdx, 0, useLine)
