@@ -1,10 +1,10 @@
 import { Elysia } from 'elysia'
 import { dbPlugin } from '../../plugins/db'
 import { createTodoService } from './service'
-import { todosModel } from './model'
+import { todoModel } from './model'
 
-export const todosRoutes = new Elysia()
-  .use(todosModel)
+export const todoRoutes = new Elysia()
+  .use(todoModel)
   .use(dbPlugin)
   .derive({ as: 'scoped' }, ({ db }) => ({ todoService: createTodoService(db) }))
   .get('/', ({ todoService }) => todoService.getAll())
@@ -14,14 +14,14 @@ export const todosRoutes = new Elysia()
       set.status = 400
       return 'Invalid ID'
     }
-    const todo = todoService.getById(numId)
-    if (!todo) {
+    const item = todoService.getById(numId)
+    if (!item) {
       set.status = 404
       return 'Not found'
     }
-    return todo
+    return item
   })
-  .post('/', ({ todoService, body }) => todoService.create(body), { body: 'createTodos' })
+  .post('/', ({ todoService, body }) => todoService.create(body), { body: 'createTodo' })
   .patch('/:id', ({ todoService, params: { id }, body, set }) => {
     const numId = Number(id)
     if (isNaN(numId)) {
@@ -34,7 +34,7 @@ export const todosRoutes = new Elysia()
       return 'Not found'
     }
     return updated
-  }, { body: 'updateTodos' })
+  }, { body: 'updateTodo' })
   .delete('/:id', ({ todoService, params: { id }, set }) => {
     const numId = Number(id)
     if (isNaN(numId)) {

@@ -3,6 +3,7 @@ import { writeFileTree, writeJson, readJson, pathExists, readText } from '../uti
 import {
   serverIndexTemplate,
   serverConfigTemplate,
+  loggerPluginTemplate,
   dbPluginTemplate,
   drizzleConfigTemplate,
   envTemplate,
@@ -27,6 +28,7 @@ export async function scaffoldProject(targetDir: string, projectName: string): P
     files['server/config.ts'] = serverConfigTemplate()
     files['server/db/schema.ts'] = `export { todos } from '../modules/todos/schema'\n`
     files['server/plugins/db.ts'] = dbPluginTemplate()
+    files['server/plugins/logger.ts'] = loggerPluginTemplate()
     files['drizzle.config.ts'] = drizzleConfigTemplate()
     files['.env'] = envTemplate()
 
@@ -98,7 +100,7 @@ export async function scaffoldProject(targetDir: string, projectName: string): P
       preview: 'NODE_ENV=production bun run server/index.ts',
       'db:generate': 'drizzle-kit generate',
       'db:migrate': 'drizzle-kit push',
-      'db:studio': 'drizzle-kit studio',
+      'db:studio': 'drizzle-kit studio --host 0.0.0.0',
       ...(pkg.scripts as Record<string, string> || {}),
     }
 
@@ -113,6 +115,7 @@ export async function scaffoldProject(targetDir: string, projectName: string): P
       '@phosphor-icons/react': '^2.1.7',
       '@stisla/css': '^3.0.1',
       '@stisla/vanilla': '^3.0.0',
+      logixlysia: '^6.6.0',
     }
     pkg.dependencies = { ...deps, ...(pkg.dependencies as Record<string, string> || {}) }
 

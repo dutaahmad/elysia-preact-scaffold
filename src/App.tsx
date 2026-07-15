@@ -1,14 +1,15 @@
-import { CaretLeftIcon, ParagraphIcon, ListIcon } from '@phosphor-icons/react'
+import { CaretLeftIcon, ParagraphIcon, ListIcon, CubeIcon } from '@phosphor-icons/react'
 import { cn } from './lib/utils'
 import { QueryClient, QueryClientProvider } from '@tanstack/preact-query'
 import { Route, Switch, Link, useRoute } from 'wouter'
 import { Home } from './pages/Home'
 import { ThemeToggle } from './components/ThemeToggle'
 // @prelysia-imports
+import { TodoList, TodoCreate, TodoEdit } from './pages/todo'
 
 const queryClient = new QueryClient()
 
-function SidebarLink({ href, children }: { href: string; children: preact.ComponentChildren }) {
+function SidebarLink({ href, children, className }: { href: string; children: preact.ComponentChildren, className?: string }) {
   const [isActive] = useRoute(href === '/' ? '/' : href + '/:rest*')
   return (
     <li class="sidebar__item">
@@ -17,7 +18,7 @@ function SidebarLink({ href, children }: { href: string; children: preact.Compon
         class={cn('sidebar__button', isActive && 'sidebar__button--active')}
         aria-current={isActive ? 'page' : undefined}
       >
-        <span>{children}</span>
+        <span className={cn(`flex gap-3 ${className}`)}>{children}</span>
       </Link>
     </li>
   )
@@ -60,6 +61,10 @@ export function App() {
               <div class="sidebar__group">
                 <div class="sidebar__group-title">Modules</div>
                 <ul class="sidebar__list">
+                <SidebarLink href="/todo">
+                  <CubeIcon size={20} /> {/* Icon: swap CubeIcon for a module-specific icon from @phosphor-icons/react */}
+                  Todo
+                </SidebarLink>
                   {/* @prelysia-sidebar */}
                   {/* Icon: generated links include a Cube icon — swap it for a module-specific icon */}
                 </ul>
@@ -76,6 +81,9 @@ export function App() {
         <main class="page app-main p-6">
           <Switch>
             <Route path="/" component={Home} />
+          <Route path="/todo" component={TodoList} />
+          <Route path="/todo/new" component={TodoCreate} />
+          <Route path="/todo/:id/edit" component={TodoEdit} />
             {/* @prelysia-routes */}
           </Switch>
         </main>

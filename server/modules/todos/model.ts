@@ -2,13 +2,13 @@ import { Elysia, t } from 'elysia'
 import { createInsertSchema, createSelectSchema } from 'drizzle-typebox'
 import { todos } from './schema'
 
-const _createTodo = createInsertSchema(todos, {
+const _createTodos = createInsertSchema(todos, {
   title: t.String({ minLength: 1 }),
 })
-const _todo = createSelectSchema(todos)
+const _todos = createSelectSchema(todos)
 
 export const todosModel = new Elysia({ name: 'todos-model' }).model({
-  createTodo: t.Omit(_createTodo, ['id', 'createdAt', 'updatedAt']),
-  updateTodo: t.Partial(t.Omit(_createTodo, ['id', 'createdAt', 'updatedAt'])),
-  todo: _todo,
+  createTodos: t.Omit(_createTodos, ['id', 'createdAt', 'updatedAt']),
+  updateTodos: t.Partial(t.Omit(_createTodos, ['id', 'createdAt', 'updatedAt'])),
+  todos: _todos,
 })

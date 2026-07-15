@@ -4,16 +4,31 @@ import type { FieldDef } from './module'
 export function feClientTemplate(): string {
   return `const BASE_URL = ''
 
+const devLog = import.meta.env.DEV
+  ? (msg: string, data?: unknown) => console.log(\`[API] \${msg}\`, data ?? '')
+  : () => {}
+
 async function request<T>(path: string, options?: RequestInit): Promise<T> {
+  const method = options?.method || 'GET'
+  const body = options?.body
+  devLog(\`\${method} \${path}\`, body ? JSON.parse(body as string) : undefined)
+
+  const start = performance.now()
   const res = await fetch(\`\${BASE_URL}\${path}\`, {
     headers: { 'Content-Type': 'application/json' },
     ...options,
   })
+  const duration = ((performance.now() - start) / 1000).toFixed(3)
+
   if (!res.ok) {
     const error = await res.json().catch(() => ({ message: res.statusText }))
+    devLog(\`\${method} \${path} \u2192 \${res.status} (\${duration}s)\`, error)
     throw new Error(error.message || res.statusText)
   }
-  return res.json()
+
+  const data: T = await res.json()
+  devLog(\`\${method} \${path} \u2192 \${res.status} (\${duration}s)\`, data)
+  return data
 }
 
 export const api = {
@@ -152,7 +167,7 @@ ${dataCells}
 `
 }
 
-export function feFormPageTemplate(name: string, fields: FieldDef[]): string {
+export function feCreatePageTemplate(name: string, fields: FieldDef[]): string {
   const Pascal = toPascalCase(name)
   const camel = toCamelCase(name)
 
@@ -161,14 +176,14 @@ export function feFormPageTemplate(name: string, fields: FieldDef[]): string {
       if (f.type === 'boolean') {
         return `          <div class="field">
             <label class="field__item" for="field-${f.name}">
-              <span class="checkbox">
-                <input
-                  type="checkbox"
-                  id="field-${f.name}"
-                  checked={formData.${f.name} ?? false}
-                  onChange={(e) => setFormData({ ...formData, ${f.name}: (e.target as HTMLInputElement).checked })}
-                />
-              </span>
+              <input
+                type="checkbox"
+                role="switch"
+                class="switch"
+                id="field-${f.name}"
+                checked={formData.${f.name} ?? false}
+                onChange={(e) => setFormData({ ...formData, ${f.name}: (e.target as HTMLInputElement).checked })}
+              />
               <span class="field__label">${f.name}</span>
             </label>
           </div>`
@@ -179,8 +194,121 @@ export function feFormPageTemplate(name: string, fields: FieldDef[]): string {
         f.type === 'number'
           ? `Number((e.target as HTMLInputElement).value)`
           : `(e.target as HTMLInputElement).value`
+      const requiredMark = f.required ? ' <span class="text-red-500">*</span>' : ''
       return `          <div class="field">
-            <label for="field-${f.name}">${f.name}</label>
+            <label for="field-${f.name}">${f.name}${requiredMark}</label>
+            <input
+              class="input"
+              type="${typeAttr}"
+              id="field-${f.name}"
+              value={formData.${f.name} ?? ''}${requiredAttr}
+              onInput={(e) => setFormData({ ...formData, ${f.name}: ${valueSetter} })}
+            />
+          </div>`
+    })
+    .join('\n')
+
+  const initialFields = fields
+    .map((f) => {
+      if (f.default !== undefined) {
+        if (f.type === 'string') return `    ${f.name}: '${f.default}'`
+        return `    ${f.name}: ${f.default}`
+      }
+      if (f.type === 'boolean') return `    ${f.name}: false`
+      if (f.type === 'number') return `    ${f.name}: 0`
+      return `    ${f.name}: ''`
+    })
+    .join(',\n')
+
+  return `import { XIcon, CheckIcon } from '@phosphor-icons/react'
+import { useState } from 'preact/hooks'
+import { useMutation, useQueryClient } from '@tanstack/preact-query'
+import { useLocation } from 'wouter'
+import { ${camel}Api } from '../../api/${name}'
+import type { Create${Pascal} } from '../../types/${name}'
+
+export function ${Pascal}Create() {
+  const [, navigate] = useLocation()
+  const queryClient = useQueryClient()
+
+  const [formData, setFormData] = useState<Create${Pascal}>({
+${initialFields},
+  })
+
+  const mutation = useMutation({
+    mutationFn: (data: Create${Pascal}) => ${camel}Api.create(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['${name}'] })
+      navigate('/${name}')
+    },
+  })
+
+  const handleSubmit = (e: Event) => {
+    e.preventDefault()
+    mutation.mutate(formData)
+  }
+
+  return (
+    <div class="page">
+      <div class="page__header">
+        <div class="page__headline">
+          <h1 class="page__title">New ${Pascal}</h1>
+        </div>
+        <div class="page__action">
+          <a href="/${name}" class="button button--neutral"><XIcon size={16} /> Cancel</a>
+        </div>
+      </div>
+      <div class="page__body">
+        <section class="page__section">
+          <form class="card" onSubmit={handleSubmit}>
+            <div class="card__body">
+${formFields}
+            </div>
+            <div class="card__footer">
+              <button type="submit" class="button button--primary" aria-busy={mutation.isPending || undefined}>
+                <CheckIcon size={20} />
+                Create
+              </button>
+            </div>
+          </form>
+        </section>
+      </div>
+    </div>
+  )
+}
+`
+}
+
+export function feEditPageTemplate(name: string, fields: FieldDef[]): string {
+  const Pascal = toPascalCase(name)
+  const camel = toCamelCase(name)
+
+  const formFields = fields
+    .map((f) => {
+      if (f.type === 'boolean') {
+        return `          <div class="field">
+            <label class="field__item" for="field-${f.name}">
+              <input
+                type="checkbox"
+                role="switch"
+                class="switch"
+                id="field-${f.name}"
+                checked={formData.${f.name} ?? false}
+                onChange={(e) => setFormData({ ...formData, ${f.name}: (e.target as HTMLInputElement).checked })}
+              />
+              <span class="field__label">${f.name}</span>
+            </label>
+          </div>`
+      }
+      const typeAttr = f.type === 'number' ? 'number' : 'text'
+      const requiredAttr = f.required ? '\n              required' : ''
+      const valueSetter =
+        f.type === 'number'
+          ? `Number((e.target as HTMLInputElement).value)`
+          : `(e.target as HTMLInputElement).value`
+      const requiredMark = f.required ? ' <span class="text-red-500">*</span>' : ''
+      return `          <div class="field">
+            <label for="field-${f.name}">${f.name}${requiredMark}</label>
             <input
               class="input"
               type="${typeAttr}"
@@ -211,11 +339,10 @@ import { useRoute, useLocation } from 'wouter'
 import { ${camel}Api } from '../../api/${name}'
 import type { Create${Pascal} } from '../../types/${name}'
 
-export function ${Pascal}Form() {
-  const [, params] = useRoute('/${name}/:id?')
+export function ${Pascal}Edit() {
+  const [, params] = useRoute('/${name}/:id/edit')
   const [, navigate] = useLocation()
   const queryClient = useQueryClient()
-  const isEdit = !!params?.id
 
   const [formData, setFormData] = useState<Create${Pascal}>({
 ${initialFields},
@@ -224,7 +351,6 @@ ${initialFields},
   const { data: existing } = useQuery({
     queryKey: ['${name}', Number(params?.id)],
     queryFn: () => ${camel}Api.getById(Number(params!.id)),
-    enabled: isEdit,
   })
 
   useEffect(() => {
@@ -235,8 +361,7 @@ ${initialFields},
   }, [existing])
 
   const mutation = useMutation({
-    mutationFn: (data: Create${Pascal}) =>
-      isEdit ? ${camel}Api.update(Number(params!.id), data) : ${camel}Api.create(data),
+    mutationFn: (data: Create${Pascal}) => ${camel}Api.update(Number(params!.id), data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['${name}'] })
       navigate('/${name}')
@@ -252,7 +377,7 @@ ${initialFields},
     <div class="page">
       <div class="page__header">
         <div class="page__headline">
-          <h1 class="page__title">{isEdit ? 'Edit' : 'New'} ${Pascal}</h1>
+          <h1 class="page__title">Edit ${Pascal}</h1>
         </div>
         <div class="page__action">
           <a href="/${name}" class="button button--neutral"><XIcon size={16} /> Cancel</a>
@@ -267,7 +392,7 @@ ${formFields}
             <div class="card__footer">
               <button type="submit" class="button button--primary" aria-busy={mutation.isPending || undefined}>
                 <CheckIcon size={20} />
-                {isEdit ? 'Update' : 'Create'}
+                Update
               </button>
             </div>
           </form>
@@ -276,6 +401,14 @@ ${formFields}
     </div>
   )
 }
+`
+}
+
+export function fePagesBarrelTemplate(name: string): string {
+  const Pascal = toPascalCase(name)
+  return `export { ${Pascal}List } from './List'
+export { ${Pascal}Create } from './Create'
+export { ${Pascal}Edit } from './Edit'
 `
 }
 

@@ -3,12 +3,16 @@ import { cors } from '@elysia/cors'
 import { staticPlugin } from '@elysia/static'
 import { config } from './config'
 import { dbPlugin } from './plugins/db'
+import { loggerPlugin } from './plugins/logger'
 import { todosModule } from './modules/todos'
+import { todoModule } from './modules/todo'
 
 const app = new Elysia()
   .use(cors())
   .use(dbPlugin)
+  .use(loggerPlugin)
   .use(todosModule)
+  .use(todoModule)
 
 if (config.isProduction) {
   app.use(

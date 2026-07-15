@@ -14,7 +14,9 @@ import {
   feTypesTemplate,
   feApiTemplate,
   feListPageTemplate,
-  feFormPageTemplate,
+  feCreatePageTemplate,
+  feEditPageTemplate,
+  fePagesBarrelTemplate,
 } from '../templates/fe'
 import { join } from 'path'
 
@@ -113,6 +115,25 @@ async function updateServerIndex(serverPath: string, moduleName: string, camelNa
   return true
 }
 
+function ensureCubeIconImport(lines: string[]): boolean {
+  const idx = lines.findIndex((l) => l.includes("from '@phosphor-icons/react'"))
+  if (idx < 0) return false
+  const line = lines[idx]
+  if (line.includes('CubeIcon')) return false
+
+  const match = line.match(/\{([^}]+)\}/)
+  if (!match) return false
+
+  const existing = match[1].trim()
+  const indent = line.match(/^(\s*)/)?.[1] || ''
+  if (existing.endsWith(',')) {
+    lines[idx] = line.replace(/\{[^}]+\}/, `{ ${existing} CubeIcon }`)
+  } else {
+    lines[idx] = line.replace(/\{[^}]+\}/, `{ ${existing}, CubeIcon }`)
+  }
+  return true
+}
+
 async function updateAppFile(basePath: string, moduleName: string, pascalName: string): Promise<boolean> {
   const appPath = join(basePath, 'src', 'App.tsx')
   if (!pathExists(appPath)) return false
@@ -120,7 +141,9 @@ async function updateAppFile(basePath: string, moduleName: string, pascalName: s
   const content = await readText(appPath)
   const lines = content.split('\n')
 
-  const importLine = `import { ${pascalName}List, ${pascalName}Form } from './pages/${moduleName}'`
+  ensureCubeIconImport(lines)
+
+  const importLine = `import { ${pascalName}List, ${pascalName}Create, ${pascalName}Edit } from './pages/${moduleName}'`
 
   const sidebarItem = `                <SidebarLink href="/${moduleName}">
                   <CubeIcon size={20} /> {/* Icon: swap CubeIcon for a module-specific icon from @phosphor-icons/react */}
@@ -129,8 +152,8 @@ async function updateAppFile(basePath: string, moduleName: string, pascalName: s
 
   const routeLines = [
     `          <Route path="/${moduleName}" component={${pascalName}List} />`,
-    `          <Route path="/${moduleName}/new" component={${pascalName}Form} />`,
-    `          <Route path="/${moduleName}/:id/edit" component={${pascalName}Form} />`,
+    `          <Route path="/${moduleName}/new" component={${pascalName}Create} />`,
+    `          <Route path="/${moduleName}/:id/edit" component={${pascalName}Edit} />`,
   ]
 
   if (content.includes(importLine)) return false
@@ -139,6 +162,12 @@ async function updateAppFile(basePath: string, moduleName: string, pascalName: s
 
   const importMarkerIdx = lines.findIndex((l) => l.includes('@prelysia-imports'))
   if (importMarkerIdx >= 0) {
+    // Remove any existing import for this module's pages (handles old single-form migration)
+    const oldImportPattern = new RegExp(`^import \\{ [^}]*\\} from ['"].\\/pages\\/${moduleName}['"]$`)
+    const oldImportIdx = lines.findIndex((l) => oldImportPattern.test(l.trim()))
+    if (oldImportIdx >= 0) {
+      lines.splice(oldImportIdx, 1)
+    }
     lines.splice(importMarkerIdx + 1, 0, importLine)
     modified = true
   }
@@ -151,6 +180,12 @@ async function updateAppFile(basePath: string, moduleName: string, pascalName: s
 
   const routesMarkerIdx = lines.findIndex((l) => l.includes('@prelysia-routes'))
   if (routesMarkerIdx >= 0) {
+    // Remove any existing routes using the old Form component for this module
+    for (let i = lines.length - 1; i >= 0; i--) {
+      if (lines[i].includes(`/${moduleName}`) && lines[i].includes(`${pascalName}Form`)) {
+        lines.splice(i, 1)
+      }
+    }
     lines.splice(routesMarkerIdx, 0, ...routeLines)
     modified = true
   }
@@ -188,6 +223,11 @@ export async function generateModule(
       await writeFileTree(serverPath, serverFiles)
       await updateDbSchema(serverPath, moduleName)
       await updateServerIndex(serverPath, moduleName, camelName)
+
+      console.log(`\nGenerated module: ${moduleName}`)
+      for (const [rel] of Object.entries(serverFiles)) {
+        console.log(`  \u2713 ${join(serverPath, rel)}`)
+      }
     }
 
     // FE files
@@ -195,19 +235,15 @@ export async function generateModule(
       [`src/types/${moduleName}.ts`]: feTypesTemplate(moduleName, fields),
       [`src/api/${moduleName}.ts`]: feApiTemplate(moduleName, fields),
       [`src/pages/${moduleName}/List.tsx`]: feListPageTemplate(moduleName, fields),
-      [`src/pages/${moduleName}/Form.tsx`]: feFormPageTemplate(moduleName, fields),
+      [`src/pages/${moduleName}/Create.tsx`]: feCreatePageTemplate(moduleName, fields),
+      [`src/pages/${moduleName}/Edit.tsx`]: feEditPageTemplate(moduleName, fields),
+      [`src/pages/${moduleName}/index.ts`]: fePagesBarrelTemplate(moduleName),
     }
     await writeFileTree(basePath, feFiles)
 
     await updateAppFile(basePath, moduleName, pascalName)
 
-    // Console output
-    if (!options?.feOnly) {
-      console.log(`\nGenerated module: ${moduleName}`)
-      for (const [rel] of Object.entries(serverFiles)) {
-        console.log(`  \u2713 ${join(serverPath, rel)}`)
-      }
-    } else {
+    if (options?.feOnly) {
       console.log(`\nGenerated FE assets: ${moduleName}`)
     }
     for (const [rel] of Object.entries(feFiles)) {

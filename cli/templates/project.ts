@@ -4,10 +4,12 @@ import { cors } from '@elysia/cors'
 import { staticPlugin } from '@elysia/static'
 import { config } from './config'
 import { dbPlugin } from './plugins/db'
+import { loggerPlugin } from './plugins/logger'
 
 const app = new Elysia()
   .use(cors())
   .use(dbPlugin)
+  .use(loggerPlugin)
 
 if (config.isProduction) {
   app.use(
@@ -51,6 +53,23 @@ export function envTemplate(): string {
   return `PORT=3000
 DB_PATH=server/data/todos.db
 NODE_ENV=development
+`
+}
+
+export function loggerPluginTemplate(): string {
+  return `import logixlysia from 'logixlysia'
+import { config } from '../config'
+
+export const loggerPlugin = logixlysia({
+  config: {
+    preset: config.isProduction ? 'prod' : 'dev',
+    ip: true,
+    showStartupMessage: true,
+    timestamp: {
+      translateTime: 'yyyy-mm-dd HH:MM:ss.SSS',
+    },
+  },
+})
 `
 }
 
