@@ -166,56 +166,60 @@ export async function generateModule(
   featureName: string,
   options?: { feOnly?: boolean },
 ): Promise<void> {
-  const moduleName = toKebabCase(featureName)
-  const serverPath = join(basePath, 'server')
-  const moduleDir = join('modules', moduleName)
-  const fields = await collectFields()
+  try {
+    const moduleName = toKebabCase(featureName)
+    const serverPath = join(basePath, 'server')
+    const moduleDir = join('modules', moduleName)
+    const fields = await collectFields()
 
-  const camelName = moduleName.replace(/-([a-z])/g, (_, c) => c.toUpperCase())
-  const pascalName = toPascalCase(moduleName)
+    const camelName = moduleName.replace(/-([a-z])/g, (_, c) => c.toUpperCase())
+    const pascalName = toPascalCase(moduleName)
 
-  // Server files
-  if (!options?.feOnly) {
-    const files: Record<string, string> = {
-      [join(moduleDir, 'schema.ts')]: schemaTemplate(moduleName, fields),
-      [join(moduleDir, 'types.ts')]: typesTemplate(moduleName),
-      [join(moduleDir, 'model.ts')]: modelTemplate(moduleName, fields),
-      [join(moduleDir, 'service.ts')]: serviceTemplate(moduleName),
-      [join(moduleDir, 'routes.ts')]: routesTemplate(moduleName),
-      [join(moduleDir, 'index.ts')]: indexTemplate(moduleName),
+    // Server files
+    if (!options?.feOnly) {
+      const serverFiles: Record<string, string> = {
+        [join(moduleDir, 'schema.ts')]: schemaTemplate(moduleName, fields),
+        [join(moduleDir, 'types.ts')]: typesTemplate(moduleName),
+        [join(moduleDir, 'model.ts')]: modelTemplate(moduleName, fields),
+        [join(moduleDir, 'service.ts')]: serviceTemplate(moduleName),
+        [join(moduleDir, 'routes.ts')]: routesTemplate(moduleName),
+        [join(moduleDir, 'index.ts')]: indexTemplate(moduleName),
+      }
+      await writeFileTree(serverPath, serverFiles)
+      await updateDbSchema(serverPath, moduleName)
+      await updateServerIndex(serverPath, moduleName, camelName)
     }
-    await writeFileTree(serverPath, files)
 
-    await updateDbSchema(serverPath, moduleName)
-    await updateServerIndex(serverPath, moduleName, camelName)
-  }
-
-  // FE files
-  const feFiles: Record<string, string> = {
-    [`src/types/${moduleName}.ts`]: feTypesTemplate(moduleName, fields),
-    [`src/api/${moduleName}.ts`]: feApiTemplate(moduleName, fields),
-    [`src/pages/${moduleName}/List.tsx`]: feListPageTemplate(moduleName, fields),
-    [`src/pages/${moduleName}/Form.tsx`]: feFormPageTemplate(moduleName, fields),
-  }
-  await writeFileTree(basePath, feFiles)
-
-  await updateAppFile(basePath, moduleName, pascalName)
-
-  // Console output
-  if (!options?.feOnly) {
-    console.log(`\nGenerated module: ${moduleName}`)
-    for (const [rel] of Object.entries(files)) {
-      console.log(`  \u2713 ${join(serverPath, rel)}`)
+    // FE files
+    const feFiles: Record<string, string> = {
+      [`src/types/${moduleName}.ts`]: feTypesTemplate(moduleName, fields),
+      [`src/api/${moduleName}.ts`]: feApiTemplate(moduleName, fields),
+      [`src/pages/${moduleName}/List.tsx`]: feListPageTemplate(moduleName, fields),
+      [`src/pages/${moduleName}/Form.tsx`]: feFormPageTemplate(moduleName, fields),
     }
-  } else {
-    console.log(`\nGenerated FE assets: ${moduleName}`)
+    await writeFileTree(basePath, feFiles)
+
+    await updateAppFile(basePath, moduleName, pascalName)
+
+    // Console output
+    if (!options?.feOnly) {
+      console.log(`\nGenerated module: ${moduleName}`)
+      for (const [rel] of Object.entries(serverFiles)) {
+        console.log(`  \u2713 ${join(serverPath, rel)}`)
+      }
+    } else {
+      console.log(`\nGenerated FE assets: ${moduleName}`)
+    }
+    for (const [rel] of Object.entries(feFiles)) {
+      console.log(`  \u2713 ${join(basePath, rel)}`)
+    }
+    if (!options?.feOnly) {
+      console.log('  \u2713 Updated server/db/schema.ts')
+      console.log('  \u2713 Updated server/index.ts')
+    }
+    console.log('  \u2713 Updated src/App.tsx')
+  } catch (err) {
+    console.error('  \u2717 Module generation failed:', err instanceof Error ? err.message : err)
+    process.exit(1)
   }
-  for (const [rel] of Object.entries(feFiles)) {
-    console.log(`  \u2713 ${join(basePath, rel)}`)
-  }
-  if (!options?.feOnly) {
-    console.log('  \u2713 Updated server/db/schema.ts')
-    console.log('  \u2713 Updated server/index.ts')
-  }
-  console.log('  \u2713 Updated src/App.tsx')
 }

@@ -1,4 +1,4 @@
-import { CaretLeftIcon, ParagraphIcon, HouseIcon, ListIcon } from '@phosphor-icons/react'
+import { CaretLeftIcon, ParagraphIcon, ListIcon } from '@phosphor-icons/react'
 import { cn } from './lib/utils'
 import { QueryClient, QueryClientProvider } from '@tanstack/preact-query'
 import { Route, Switch, Link, useRoute } from 'wouter'

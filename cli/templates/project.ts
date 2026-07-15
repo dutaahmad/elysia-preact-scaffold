@@ -34,6 +34,26 @@ export function serverConfigTemplate(): string {
 `
 }
 
+export function drizzleConfigTemplate(): string {
+  return `import { defineConfig } from 'drizzle-kit'
+
+export default defineConfig({
+  dialect: 'sqlite',
+  schema: './server/db/schema.ts',
+  dbCredentials: {
+    url: process.env.DB_PATH ?? 'server/data/todos.db',
+  },
+})
+`
+}
+
+export function envTemplate(): string {
+  return `PORT=3000
+DB_PATH=server/data/todos.db
+NODE_ENV=development
+`
+}
+
 export function dbPluginTemplate(): string {
   return `import { Elysia } from 'elysia'
 import { Database } from 'bun:sqlite'
