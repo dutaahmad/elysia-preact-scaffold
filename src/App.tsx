@@ -5,9 +5,6 @@ import { Route, Switch, Link, useRoute } from 'wouter'
 import { Home } from './pages/Home'
 import { ThemeToggle } from './components/ThemeToggle'
 // @prelysia-imports
-import { PeopleList, PeopleCreate, PeopleEdit } from './pages/people'
-import { RegisterList, RegisterCreate, RegisterEdit } from './pages/register'
-import { TodoList, TodoCreate, TodoEdit } from './pages/todo'
 
 const queryClient = new QueryClient()
 
@@ -63,18 +60,6 @@ export function App() {
               <div class="sidebar__group">
                 <div class="sidebar__group-title">Modules</div>
                 <ul class="sidebar__list">
-                <SidebarLink href="/todo">
-                  <CubeIcon size={20} /> {/* Icon: swap CubeIcon for a module-specific icon from @phosphor-icons/react */}
-                  Todo
-                </SidebarLink>
-                <SidebarLink href="/register">
-                  <CubeIcon size={20} /> {/* Icon: swap CubeIcon for a module-specific icon from @phosphor-icons/react */}
-                  Register
-                </SidebarLink>
-                <SidebarLink href="/people">
-                  <CubeIcon size={20} /> {/* Icon: swap CubeIcon for a module-specific icon from @phosphor-icons/react */}
-                  People
-                </SidebarLink>
                   {/* @prelysia-sidebar */}
                   {/* Icon: generated links include a Cube icon — swap it for a module-specific icon */}
                 </ul>
@@ -91,15 +76,6 @@ export function App() {
         <main class="page app-main p-6">
           <Switch>
             <Route path="/" component={Home} />
-          <Route path="/todo" component={TodoList} />
-          <Route path="/todo/new" component={TodoCreate} />
-          <Route path="/todo/:id/edit" component={TodoEdit} />
-          <Route path="/register" component={RegisterList} />
-          <Route path="/register/new" component={RegisterCreate} />
-          <Route path="/register/:id/edit" component={RegisterEdit} />
-          <Route path="/people" component={PeopleList} />
-          <Route path="/people/new" component={PeopleCreate} />
-          <Route path="/people/:id/edit" component={PeopleEdit} />
             {/* @prelysia-routes */}
           </Switch>
         </main>

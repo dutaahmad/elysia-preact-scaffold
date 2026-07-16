@@ -3,6 +3,7 @@
 import { Command } from 'commander'
 import { initAction } from './commands/init'
 import { featAction } from './commands/feat'
+import { removeAction } from './commands/remove'
 import { readFileSync } from 'fs'
 import { join, dirname } from 'path'
 import { fileURLToPath } from 'url'
@@ -38,5 +39,11 @@ program
   .argument('<name>', 'Feature name (kebab-case)')
   .option('--fe-only', 'Only generate FE assets (types, api, pages)')
   .action(featAction)
+
+program
+  .command('remove')
+  .description('Remove a module and its database table')
+  .argument('<name>', 'Module name (kebab-case)')
+  .action(removeAction)
 
 program.parse()

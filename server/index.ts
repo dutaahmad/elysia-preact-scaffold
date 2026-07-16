@@ -5,18 +5,12 @@ import { config } from './config'
 import { dbPlugin } from './plugins/db'
 import { loggerPlugin } from './plugins/logger'
 import { todosModule } from './modules/todos'
-import { todoModule } from './modules/todo'
-import { registerModule } from './modules/register'
-import { peopleModule } from './modules/people'
 
 const app = new Elysia()
   .use(cors())
   .use(dbPlugin)
   .use(loggerPlugin)
   .use(todosModule)
-  .use(todoModule)
-  .use(registerModule)
-  .use(peopleModule)
 
 if (config.isProduction) {
   app.use(

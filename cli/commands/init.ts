@@ -1,6 +1,6 @@
 import { join, resolve } from 'path'
 import { confirm } from '@inquirer/prompts'
-import { scaffoldProject } from '../generators/scaffold'
+import { scaffoldProject } from '../generator/scaffold'
 import { pathExists, listDir } from '../utils/fs'
 import { toKebabCase } from '../utils/name'
 

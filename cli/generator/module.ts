@@ -1,69 +1,22 @@
-import { input, select, confirm } from '@inquirer/prompts'
+import { join } from 'path'
 import { toKebabCase, toPascalCase } from '../utils/name'
-import { writeFileTree, readText, writeText, pathExists } from '../utils/fs'
+import { writeFileTree, readText, writeText, pathExists, removeDir, removeFile } from '../utils/fs'
 import {
   schemaTemplate,
-  typesTemplate,
-  modelTemplate,
-  serviceTemplate,
-  routesTemplate,
-  indexTemplate,
-  type FieldDef,
-} from '../templates/module'
+} from '../templates/server-schema'
+import { typesTemplate } from '../templates/server-types'
+import { modelTemplate } from '../templates/server-model'
+import { serviceTemplate } from '../templates/server-service'
+import { routesTemplate, indexTemplate } from '../templates/server-routes'
+import { feTypesTemplate } from '../templates/fe-types'
+import { feApiTemplate } from '../templates/fe-api'
 import {
-  feTypesTemplate,
-  feApiTemplate,
   feListPageTemplate,
   feCreatePageTemplate,
   feEditPageTemplate,
   fePagesBarrelTemplate,
-} from '../templates/fe'
-import { join } from 'path'
-
-async function collectFields(): Promise<FieldDef[]> {
-  const fields: FieldDef[] = []
-  let addMore = true
-
-  while (addMore) {
-    const name = await input({
-      message: 'Field name (snake_case):',
-      validate: (v) => (v ? true : 'Field name is required'),
-    })
-
-    const type = await select<'string' | 'number' | 'boolean'>({
-      message: `Field type for "${name}":`,
-      choices: [
-        { name: 'string (text)', value: 'string' },
-        { name: 'number (integer)', value: 'number' },
-        { name: 'boolean', value: 'boolean' },
-      ],
-    })
-
-    const required = await confirm({
-      message: `Is "${name}" required?`,
-      default: true,
-    })
-
-    let defaultVal: string | boolean | number | undefined
-    if (!required) {
-      const defaultRaw = await input({
-        message: `Default value for "${name}" (leave empty for none):`,
-      })
-      if (defaultRaw) {
-        defaultVal = type === 'number' ? Number(defaultRaw) : type === 'boolean' ? defaultRaw === 'true' : defaultRaw
-      }
-    }
-
-    fields.push({ name, type, required, default: defaultVal })
-
-    addMore = await confirm({
-      message: 'Add another field?',
-      default: false,
-    })
-  }
-
-  return fields
-}
+} from '../templates/fe-pages'
+import type { FieldDef } from '../types'
 
 async function updateDbSchema(serverPath: string, tableName: string): Promise<boolean> {
   const schemaPath = join(serverPath, 'db', 'schema.ts')
@@ -162,7 +115,6 @@ async function updateAppFile(basePath: string, moduleName: string, pascalName: s
 
   const importMarkerIdx = lines.findIndex((l) => l.includes('@prelysia-imports'))
   if (importMarkerIdx >= 0) {
-    // Remove any existing import for this module's pages (handles old single-form migration)
     const oldImportPattern = new RegExp(`^import \\{ [^}]*\\} from ['"].\\/pages\\/${moduleName}['"]$`)
     const oldImportIdx = lines.findIndex((l) => oldImportPattern.test(l.trim()))
     if (oldImportIdx >= 0) {
@@ -180,7 +132,6 @@ async function updateAppFile(basePath: string, moduleName: string, pascalName: s
 
   const routesMarkerIdx = lines.findIndex((l) => l.includes('@prelysia-routes'))
   if (routesMarkerIdx >= 0) {
-    // Remove any existing routes using the old Form component for this module
     for (let i = lines.length - 1; i >= 0; i--) {
       if (lines[i].includes(`/${moduleName}`) && lines[i].includes(`${pascalName}Form`)) {
         lines.splice(i, 1)
@@ -198,14 +149,13 @@ async function updateAppFile(basePath: string, moduleName: string, pascalName: s
 
 export async function generateModule(
   basePath: string,
-  featureName: string,
+  moduleName: string,
+  fields: FieldDef[],
   options?: { feOnly?: boolean },
 ): Promise<void> {
   try {
-    const moduleName = toKebabCase(featureName)
     const serverPath = join(basePath, 'server')
     const moduleDir = join('modules', moduleName)
-    const fields = await collectFields()
 
     const camelName = moduleName.replace(/-([a-z])/g, (_, c) => c.toUpperCase())
     const pascalName = toPascalCase(moduleName)
@@ -258,4 +208,154 @@ export async function generateModule(
     console.error('  \u2717 Module generation failed:', err instanceof Error ? err.message : err)
     process.exit(1)
   }
+}
+
+async function removeDbSchema(serverPath: string, tableName: string): Promise<boolean> {
+  const schemaPath = join(serverPath, 'db', 'schema.ts')
+  if (!pathExists(schemaPath)) return false
+
+  const content = await readText(schemaPath)
+  const exportLine = `export { ${tableName} } from '../modules/${tableName}/schema'`
+  if (!content.includes(exportLine)) return false
+
+  const lines = content.split('\n').filter((l) => l !== exportLine)
+  await writeText(schemaPath, lines.join('\n'))
+  return true
+}
+
+async function removeServerIndex(serverPath: string, moduleName: string, camelName: string): Promise<boolean> {
+  const indexPath = join(serverPath, 'index.ts')
+  if (!pathExists(indexPath)) return false
+
+  const content = await readText(indexPath)
+  const lines = content.split('\n')
+
+  const importLine = `import { ${camelName}Module } from './modules/${moduleName}'`
+  const useLine = `  .use(${camelName}Module)`
+
+  const filtered = lines.filter((l) => {
+    const trimmed = l.trim()
+    return trimmed !== importLine.trim() && trimmed !== useLine.trim()
+  })
+
+  if (filtered.length === lines.length) return false
+
+  await writeText(indexPath, filtered.join('\n'))
+  return true
+}
+
+async function removeAppFileRefs(basePath: string, moduleName: string, pascalName: string): Promise<boolean> {
+  const appPath = join(basePath, 'src', 'App.tsx')
+  if (!pathExists(appPath)) return false
+
+  const content = await readText(appPath)
+  const lines = content.split('\n')
+
+  const importPattern = new RegExp(`^import \\{ [^}]*\\} from ['"]./pages/${moduleName}['"]$`)
+  const sidebarOpenPattern = new RegExp(`^\\s*<SidebarLink href="/${moduleName}">`)
+
+  const result: string[] = []
+  let insideSidebarBlock = false
+  let modified = false
+
+  for (const line of lines) {
+    if (sidebarOpenPattern.test(line)) {
+      insideSidebarBlock = true
+      modified = true
+      continue
+    }
+    if (insideSidebarBlock) {
+      if (line.trim() === '</SidebarLink>') {
+        insideSidebarBlock = false
+        continue
+      }
+      continue
+    }
+    if (importPattern.test(line.trim())) {
+      modified = true
+      continue
+    }
+    if (line.includes(`<Route path="/${moduleName}"`)) {
+      modified = true
+      continue
+    }
+    if (line.includes(`<Route path="/${moduleName}/new"`)) {
+      modified = true
+      continue
+    }
+    if (line.includes(`<Route path="/${moduleName}/:id/edit"`)) {
+      modified = true
+      continue
+    }
+    result.push(line)
+  }
+
+  if (!modified) return false
+
+  await writeText(appPath, result.join('\n'))
+  return true
+}
+
+export async function cleanupModule(
+  basePath: string,
+  featureName: string,
+): Promise<void> {
+  const moduleName = toKebabCase(featureName)
+  const serverPath = join(basePath, 'server')
+
+  const camelName = moduleName.replace(/-([a-z])/g, (_, c) => c.toUpperCase())
+  const pascalName = toPascalCase(moduleName)
+
+  const serverModulePath = join(serverPath, 'modules', moduleName)
+  const feTypesPath = join(basePath, 'src', 'types', `${moduleName}.ts`)
+  const feApiPath = join(basePath, 'src', 'api', `${moduleName}.ts`)
+  const fePagesPath = join(basePath, 'src', 'pages', moduleName)
+
+  // Remove server module directory
+  if (pathExists(serverModulePath)) {
+    removeDir(serverModulePath)
+    console.log(`  \u2713 Removed server/modules/${moduleName}/`)
+  }
+
+  // Remove FE files
+  for (const [label, fp] of [
+    ['src/types', feTypesPath],
+    ['src/api', feApiPath],
+    ['src/pages', fePagesPath],
+  ] as const) {
+    if (pathExists(fp)) {
+      if (fp === fePagesPath) {
+        removeDir(fp)
+      } else {
+        removeFile(fp)
+      }
+      console.log(`  \u2713 Removed ${label}/${moduleName}`)
+    }
+  }
+
+  // Update referencing files
+  await removeDbSchema(serverPath, moduleName)
+  console.log('  \u2713 Updated server/db/schema.ts')
+
+  await removeServerIndex(serverPath, moduleName, camelName)
+  console.log('  \u2713 Updated server/index.ts')
+
+  await removeAppFileRefs(basePath, moduleName, pascalName)
+  console.log('  \u2713 Updated src/App.tsx')
+
+  // Run drizzle-kit push to sync database schema
+  console.log('\nSyncing database schema...')
+  const migrate = Bun.spawnSync(['bunx', 'drizzle-kit', 'push'], { cwd: basePath })
+  if (migrate.exitCode === 0) {
+    console.log('  \u2713 Database schema synced')
+  } else {
+    const stderr = migrate.stderr.toString()
+    if (stderr.includes('no such table') || stderr.includes('nothing to migrate')) {
+      console.log('  \u2192 Database already up to date')
+    } else {
+      console.warn('  \u26A0 Warning: DB sync had issues:', stderr)
+    }
+  }
+
+  console.log(`\nModule "${moduleName}" removed.`)
 }

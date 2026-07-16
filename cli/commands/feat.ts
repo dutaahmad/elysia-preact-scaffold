@@ -1,6 +1,53 @@
-import { generateModule } from '../generators/module'
+import { input, select, confirm } from '@inquirer/prompts'
+import { generateModule } from '../generator/module'
 import { pathExists, readText } from '../utils/fs'
 import { join } from 'path'
+import type { FieldDef } from '../types'
+
+async function collectFields(): Promise<FieldDef[]> {
+  const fields: FieldDef[] = []
+  let addMore = true
+
+  while (addMore) {
+    const name = await input({
+      message: 'Field name (snake_case):',
+      validate: (v) => (v ? true : 'Field name is required'),
+    })
+
+    const type = await select<'string' | 'number' | 'boolean'>({
+      message: `Field type for "${name}":`,
+      choices: [
+        { name: 'string (text)', value: 'string' },
+        { name: 'number (integer)', value: 'number' },
+        { name: 'boolean', value: 'boolean' },
+      ],
+    })
+
+    const required = await confirm({
+      message: `Is "${name}" required?`,
+      default: true,
+    })
+
+    let defaultVal: string | boolean | number | undefined
+    if (!required) {
+      const defaultRaw = await input({
+        message: `Default value for "${name}" (leave empty for none):`,
+      })
+      if (defaultRaw) {
+        defaultVal = type === 'number' ? Number(defaultRaw) : type === 'boolean' ? defaultRaw === 'true' : defaultRaw
+      }
+    }
+
+    fields.push({ name, type, required, default: defaultVal })
+
+    addMore = await confirm({
+      message: 'Add another field?',
+      default: false,
+    })
+  }
+
+  return fields
+}
 
 export async function featAction(
   name: string,
@@ -34,5 +81,6 @@ export async function featAction(
     process.exit(1)
   }
 
-  await generateModule(targetDir, name, { feOnly: options.feOnly ?? false })
+  const fields = await collectFields()
+  await generateModule(targetDir, name, fields, { feOnly: options.feOnly ?? false })
 }

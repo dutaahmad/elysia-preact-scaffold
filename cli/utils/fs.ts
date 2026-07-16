@@ -1,4 +1,4 @@
-import { existsSync, mkdirSync } from 'fs'
+import { existsSync, mkdirSync, unlinkSync, rmSync } from 'fs'
 import { readFile, writeFile, readdir as fsReaddir } from 'fs/promises'
 import { dirname, join } from 'path'
 
@@ -43,6 +43,14 @@ export async function listDir(dirPath: string): Promise<string[]> {
 export async function writeText(filePath: string, content: string): Promise<void> {
   ensureDir(filePath)
   await writeFile(filePath, content, 'utf-8')
+}
+
+export function removeDir(dirPath: string): void {
+  rmSync(dirPath, { recursive: true, force: true })
+}
+
+export function removeFile(filePath: string): void {
+  unlinkSync(filePath)
 }
 
 export async function updateProjectFile(

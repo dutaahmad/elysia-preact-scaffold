@@ -1,5 +1,5 @@
 import { join } from 'path'
-import { writeFileTree, writeJson, readJson, pathExists, readText } from '../utils/fs'
+import { writeFileTree, writeJson, readJson, pathExists, readText, writeText } from '../utils/fs'
 import {
   serverIndexTemplate,
   serverConfigTemplate,
@@ -8,17 +8,14 @@ import {
   drizzleConfigTemplate,
   envTemplate,
 } from '../templates/project'
-import { schemaTemplate, typesTemplate, modelTemplate, serviceTemplate, routesTemplate, indexTemplate } from '../templates/module'
-import {
-  feClientTemplate,
-  feAppTemplate,
-  feHomeTemplate,
-  feMainTemplate,
-  feStyleTemplate,
-  feUseThemeTemplate,
-  feThemeToggleTemplate,
-  feUtilsTemplate,
-} from '../templates/fe'
+import { schemaTemplate } from '../templates/server-schema'
+import { typesTemplate } from '../templates/server-types'
+import { modelTemplate } from '../templates/server-model'
+import { serviceTemplate } from '../templates/server-service'
+import { routesTemplate, indexTemplate } from '../templates/server-routes'
+import { feClientTemplate } from '../templates/fe-client'
+import { feAppTemplate, feMainTemplate, feHomeTemplate } from '../templates/fe-entry'
+import { feStyleTemplate, feUseThemeTemplate, feThemeToggleTemplate, feUtilsTemplate } from '../templates/fe-theme'
 
 export async function scaffoldProject(targetDir: string, projectName: string): Promise<void> {
   try {
