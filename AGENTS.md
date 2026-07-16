@@ -1,6 +1,6 @@
 # AGENTS.md
 
-**This is a fullstack scaffold/code generator.** Prioritize CLI-side (`cli/`) fixes and enhancements over application code. The CLI (`prelysia`) is the primary interface users interact with.
+**This is a fullstack scaffold/code generator.** Prioritize CLI-side (`packages/prelysia/cli/`) fixes and enhancements over application code. The CLI (`prelysia`) is the primary interface users interact with.
 
 ## Stack
 
@@ -23,7 +23,7 @@
 | Backend | `server/index.ts` | `tsconfig.server.json` (not in root references) |
 | Frontend | `src/main.tsx` | `tsconfig.app.json` (referenced from root) |
 | DB Schema | `server/db/schema.ts` (re-exports module schemas) | `drizzle.config.ts` |
-| CLI | `cli/prelysia.ts` | No tsconfig — runs via `#!/usr/bin/env bun` shebang |
+| CLI | `packages/prelysia/cli/prelysia.ts` | No tsconfig — runs via `#!/usr/bin/env bun` shebang |
 
 ## Architecture
 
@@ -37,7 +37,7 @@
 - **Theme flash prevention**: `index.html` has an inline `<script>` that reads localStorage `stisla-theme` before first paint — do not remove it.
 - **Tailwind v4**: `src/style.css` uses `@import "tailwindcss"` and `@source "./src"` for class scanning. `vite.config.ts` includes `@tailwindcss/vite` plugin.
 - **SidebarLink**: shared component in `src/App.tsx`, uses `cn()` and `aria-current` for active state. Icon passed as children.
-- **CLI templates**: `cli/templates/module.ts` (6 server files), `cli/templates/fe.ts` (client, types, api, list/form pages, app template, home, theme, utils), `cli/templates/project.ts` (scaffold server files). CLI code is NOT typechecked.
+- **CLI templates**: `packages/prelysia/cli/templates/module.ts` (6 server files), `packages/prelysia/cli/templates/fe.ts` (client, types, api, list/form pages, app template, home, theme, utils), `packages/prelysia/cli/templates/project.ts` (scaffold server files). CLI code is NOT typechecked.
 
 ## Commands
 
@@ -50,16 +50,16 @@ bun run preview      # NODE_ENV=production bun run server/index.ts (SPA + API)
 bun run db:migrate   # drizzle-kit push (needs @libsql/client in devDeps)
 bun run db:generate  # drizzle-kit generate (creates SQL files in drizzle/)
 bun run db:studio    # drizzle-kit studio
-bun cli/prelysia.ts  # CLI entry (use `bun cli/prelysia.ts --help`)
+bun packages/prelysia/cli/prelysia.ts  # CLI entry (use `bun packages/prelysia/cli/prelysia.ts --help`)
 ```
 
 ## Dev Workflow
 
 - Vite on :5173 proxies `/api/*` → `http://localhost:3000` (configured in `vite.config.ts`).
 - Elysia on :3000 handles API routes; in production also serves `dist/` via `@elysia/static` with `indexHTML: true`.
-- First time setup: `bun run db:migrate` to create tables. Or `bun cli/prelysia.ts init` for full scaffold (scaffolds files, runs `bun install`, then `drizzle-kit push`).
-- Add CRUD modules: `bun cli/prelysia.ts feat <kebab-name>` (interactive field prompts, generates all 6 server files + FE assets + updates index.ts + App.tsx). Use `--fe-only` to skip server-side generation.
-- `cli/` code is NOT typechecked by any tsconfig — run `bun cli/prelysia.ts` to verify.
+- First time setup: `bun run db:migrate` to create tables. Or `bun packages/prelysia/cli/prelysia.ts init` for full scaffold (scaffolds files, runs `bun install`, then `drizzle-kit push`).
+- Add CRUD modules: `bun packages/prelysia/cli/prelysia.ts feat <kebab-name>` (interactive field prompts, generates all 6 server files + FE assets + updates index.ts + App.tsx). Use `--fe-only` to skip server-side generation.
+- `packages/prelysia/cli/` code is NOT typechecked by any tsconfig — run `bun packages/prelysia/cli/prelysia.ts` to verify.
 - `.env` vars: `PORT`, `DB_PATH`, `NODE_ENV` (auto-loaded by Bun, no dotenv). `.env.example` is unrelated cruft (ClickUp tokens), ignore it.
 
 ## Key Conventions

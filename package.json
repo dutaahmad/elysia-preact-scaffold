@@ -3,6 +3,9 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
+  "workspaces": [
+    "packages/prelysia"
+  ],
   "scripts": {
     "dev": "concurrently -n \"vite,elysia\" -c \"cyan,green\" \"vite --host\" \"bun run --watch server/index.ts\"",
     "dev:fe": "vite --host",
@@ -12,8 +15,8 @@
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit push",
     "db:studio": "bunx drizzle-kit studio --host 0.0.0.0 --port 4983",
-    "prelysia": "bun run cli/prelysia.ts",
-    "feat": "bun run cli/prelysia.ts feat"
+    "prelysia": "bun run packages/prelysia/cli/prelysia.ts",
+    "feat": "bun run packages/prelysia/cli/prelysia.ts feat"
   },
   "dependencies": {
     "@elysia/cors": "^1.4.2",

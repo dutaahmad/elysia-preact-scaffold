@@ -1,4 +1,4 @@
-import { join, resolve } from 'path'
+import { basename, isAbsolute, resolve } from 'path'
 import { confirm } from '@inquirer/prompts'
 import { scaffoldProject } from '../generator/scaffold'
 import { pathExists, listDir } from '../utils/fs'
@@ -20,8 +20,12 @@ export async function initAction(
   let targetDir: string
 
   if (projectName) {
-    const name = toKebabCase(projectName)
-    targetDir = resolve(options.cwd || process.cwd(), name)
+    const base = resolve(options.cwd || process.cwd())
+    if (isAbsolute(projectName)) {
+      targetDir = resolve(projectName)
+    } else {
+      targetDir = resolve(base, toKebabCase(projectName))
+    }
   } else {
     targetDir = resolve(options.cwd || process.cwd())
   }
@@ -37,7 +41,11 @@ export async function initAction(
     }
   }
 
-  const name = projectName || 'elysia-preact-app'
+  const name = projectName
+    ? isAbsolute(projectName)
+      ? toKebabCase(basename(projectName))
+      : toKebabCase(projectName)
+    : 'elysia-preact-app'
 
   console.log(`Scaffolding project at ${targetDir}...`)
   await scaffoldProject(targetDir, name)
