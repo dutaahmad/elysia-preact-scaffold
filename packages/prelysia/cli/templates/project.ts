@@ -49,10 +49,35 @@ export default defineConfig({
 `
 }
 
-export function envTemplate(): string {
+export function envExampleTemplate(): string {
+  return `# Server
+PORT=3000
+
+# Database (SQLite file path, relative to project root)
+DB_PATH=server/data/app.db
+
+# Environment
+NODE_ENV=development
+`
+}
+
+export function envLocalTemplate(): string {
   return `PORT=3000
 DB_PATH=server/data/todos.db
 NODE_ENV=development
+`
+}
+
+export function gitignoreTemplate(): string {
+  return `node_modules
+dist
+.env
+*.db
+*.db-wal
+*.db-shm
+drizzle/
+*.local
+.DS_Store
 `
 }
 

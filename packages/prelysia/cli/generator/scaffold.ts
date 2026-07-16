@@ -1,4 +1,6 @@
-import { join } from 'path'
+import { mkdirSync, readFileSync } from 'fs'
+import { join, dirname } from 'path'
+import { fileURLToPath } from 'url'
 import { writeFileTree, writeJson, readJson, pathExists, readText, writeText } from '../utils/fs'
 import {
   serverIndexTemplate,
@@ -6,7 +8,9 @@ import {
   loggerPluginTemplate,
   dbPluginTemplate,
   drizzleConfigTemplate,
-  envTemplate,
+  envExampleTemplate,
+  envLocalTemplate,
+  gitignoreTemplate,
 } from '../templates/project'
 import { schemaTemplate } from '../templates/server-schema'
 import { typesTemplate } from '../templates/server-types'
@@ -27,7 +31,13 @@ export async function scaffoldProject(targetDir: string, projectName: string): P
     files['server/plugins/db.ts'] = dbPluginTemplate()
     files['server/plugins/logger.ts'] = loggerPluginTemplate()
     files['drizzle.config.ts'] = drizzleConfigTemplate()
-    files['.env'] = envTemplate()
+    files['.env'] = envLocalTemplate()
+    files['.env.example'] = envExampleTemplate()
+    files['.gitignore'] = gitignoreTemplate()
+
+    const __filename = fileURLToPath(import.meta.url)
+    const readmePath = join(dirname(__filename), '../templates/USER_README.md')
+    files['README.md'] = readFileSync(readmePath, 'utf-8').replace('{{projectName}}', projectName)
 
     const todoFields = [
       { name: 'title', type: 'string' as const, required: true },
@@ -136,6 +146,9 @@ export async function scaffoldProject(targetDir: string, projectName: string): P
     } else {
       console.error('  \u2717 bun install failed:', install.stderr.toString())
     }
+
+    mkdirSync(join(targetDir, 'server/data'), { recursive: true })
+    console.log('  \u2713 Created server/data/ directory')
 
     console.log('\nRunning database migration...')
     const migrate = Bun.spawnSync(['bunx', 'drizzle-kit', 'push'], { cwd: targetDir })

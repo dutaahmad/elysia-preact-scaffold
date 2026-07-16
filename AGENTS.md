@@ -1,78 +1,89 @@
 # AGENTS.md
 
-**This is a fullstack scaffold/code generator.** Prioritize CLI-side (`packages/prelysia/cli/`) fixes and enhancements over application code. The CLI (`prelysia`) is the primary interface users interact with.
+**Never commit without asking the user first.** If commit is needed, prompt for confirmation. Use global git config (`user.name`/`user.email`), not repo-local overrides.
+
+**This repo is a fullstack scaffold/code generator.** The CLI (`packages/prelysia/cli/`) is the primary interface — prioritize CLI fixes over app code. The root app (`server/`, `src/`) is the reference scaffold, not production logic.
 
 ## Stack
 
-- **Runtime**: Bun (v1.3+)
-- **Backend**: Elysia 1.4, modular monolith (plugins per domain)
-- **Frontend**: Preact 10 + Vite 8 (SPA), **Stisla** CSS (`.navbar`, `.sidebar`, `.card`, `.page`, `.table`, `.field`, `.button`) loaded with `@ts-expect-error` (no type declarations), **Tailwind CSS v4** for spacing/sizing utilities
-- **FE Routing/Data**: wouter (`Route`, `Switch`, `Link`, `useRoute`) + `@tanstack/preact-query` (`QueryClientProvider`)
-- **Icons**: `@phosphor-icons/react` (PascalCase with `Icon` suffix, e.g. `SunIcon`, `MoonIcon`, `PlusIcon`, `TrashIcon`), `size={20}` standalone, `size={16}` inline
+- **Runtime**: Bun 1.3+
+- **Backend**: Elysia 1.4, modular monolith, module per domain in `server/modules/<name>/`
+- **Frontend**: Preact 10 + Vite 8 SPA, **Stisla** CSS (`.navbar`, `.sidebar`, `.card`, `.page`, `.table`, `.field`, `.button`), **Tailwind v4** for spacing/sizing only
+- **FE Routing/Data**: wouter (`Route`, `Switch`, `Link`, `useRoute`, `useLocation`) + `@tanstack/preact-query`
+- **Icons**: `@phosphor-icons/react` with `Icon` suffix, `size={20}` standalone, `size={16}` inline
+- **DB**: Bun SQLite + Drizzle ORM, `drizzle-typebox` for validation
 - **Class composition**: `clsx` + `tailwind-merge` via `cn()` from `src/lib/utils.ts`
-- **Theme**: `useTheme` hook sets `data-theme` on `<html>`, persisted to localStorage key `stisla-theme`
-- **Database**: Bun SQLite + Drizzle ORM, `drizzle-typebox` for validation
-- **CLI**: `prelysia` (Commander.js + `@inquirer/prompts`)
-- **Language**: TypeScript 6.0, `erasableSyntaxOnly: true` — no enums, no parameter properties, no namespaces
-- **No linter, no test framework, no typecheck command**
+- **TypeScript 6.0**, `erasableSyntaxOnly: true` — no enums, no parameter properties, no namespaces
+- **No linter, no test framework, no typecheck command.** `bun run build` is the only verification.
 
 ## Entrypoints
 
 | Layer | Entry | Config |
 |-------|-------|--------|
-| Backend | `server/index.ts` | `tsconfig.server.json` (not in root references) |
+| Backend | `server/index.ts` | `tsconfig.server.json` (not in root `tsconfig.json` references) |
 | Frontend | `src/main.tsx` | `tsconfig.app.json` (referenced from root) |
 | DB Schema | `server/db/schema.ts` (re-exports module schemas) | `drizzle.config.ts` |
 | CLI | `packages/prelysia/cli/prelysia.ts` | No tsconfig — runs via `#!/usr/bin/env bun` shebang |
 
-## Architecture
-
-- **Server**: each domain = `server/modules/<name>/` with 6 files — `schema.ts` (Drizzle table), `types.ts` (InferSelectModel/InsertModel), `model.ts` (drizzle-typebox → Elysia.t validation), `service.ts` (CRUD factory `(db) => ({...})`), `routes.ts` (Elysia routes), `index.ts` (Elysia plugin — prefix + routes). Register in `server/index.ts` via `.use(module)`, add re-export to `server/db/schema.ts`.
-- **Frontend**: generated module FE assets go to `src/types/<module>.ts`, `src/api/<module>.ts`, `src/pages/<module>/List.tsx`, `src/pages/<module>/Form.tsx`. `src/App.tsx` uses marker comments for codegen: `// @prelysia-imports` (import insertion), `{/* @prelysia-sidebar */}` (sidebar link), `{/* @prelysia-routes */}` (Route components). **Never remove these markers.** The `feat` command validates markers exist and refuses if missing.
-- **DB**: global Elysia decoration — every route handler gets `db` on context. Decorated in `server/plugins/db.ts` via `.decorate('db', drizzle(sqlite)).as('global')`.
-- **CLI `init`**: scaffolds files, then runs `bun install` and `drizzle-kit push` automatically.
-- **Preact compat**: `tsconfig.app.json` aliases `react` → `preact/compat`, uses `"jsx": "react-jsx"`, `"jsxImportSource": "preact"`.
-- **Stisla page layout**: every page follows `.page > .page__header` (`.page__headline` > `.page__title` + `.page__description`; optional `.page__actions`) + `.page__body > .page__section > .card`.
-- **Theme**: `useTheme` hook in `src/hooks/useTheme.ts` + `ThemeToggle` in `src/components/ThemeToggle.tsx`. Sets `document.documentElement.dataset.theme`.
-- **Theme flash prevention**: `index.html` has an inline `<script>` that reads localStorage `stisla-theme` before first paint — do not remove it.
-- **Tailwind v4**: `src/style.css` uses `@import "tailwindcss"` and `@source "./src"` for class scanning. `vite.config.ts` includes `@tailwindcss/vite` plugin.
-- **SidebarLink**: shared component in `src/App.tsx`, uses `cn()` and `aria-current` for active state. Icon passed as children.
-- **CLI templates**: `packages/prelysia/cli/templates/module.ts` (6 server files), `packages/prelysia/cli/templates/fe.ts` (client, types, api, list/form pages, app template, home, theme, utils), `packages/prelysia/cli/templates/project.ts` (scaffold server files). CLI code is NOT typechecked.
-
 ## Commands
 
 ```bash
-bun run dev          # concurrently: vite (:5173) + elysia --watch (:3000)
-bun run dev:fe       # vite only
-bun run dev:be       # elysia only with --watch
-bun run build        # vite build only (into dist/) — only verification command
-bun run preview      # NODE_ENV=production bun run server/index.ts (SPA + API)
-bun run db:migrate   # drizzle-kit push (needs @libsql/client in devDeps)
-bun run db:generate  # drizzle-kit generate (creates SQL files in drizzle/)
-bun run db:studio    # drizzle-kit studio
-bun packages/prelysia/cli/prelysia.ts  # CLI entry (use `bun packages/prelysia/cli/prelysia.ts --help`)
+bun run dev               # concurrently: vite (:5173) + elysia --watch (:3000)
+bun run dev:fe            # vite only (with --host)
+bun run dev:be            # elysia only with --watch
+bun run build             # vite build into dist/ (the only verification command)
+bun run preview           # NODE_ENV=production bun run server/index.ts (SPA + API on :3000)
+bun run db:migrate        # drizzle-kit push
+bun run db:generate       # drizzle-kit generate (SQL files to drizzle/)
+bun run db:studio         # bunx drizzle-kit studio --host 0.0.0.0 --port 4983
+bun run prelysia          # shortcut: bun run packages/prelysia/cli/prelysia.ts
+bun run feat              # shortcut: bun run packages/prelysia/cli/prelysia.ts feat
 ```
 
-## Dev Workflow
+## CLI (`prelysia`)
 
-- Vite on :5173 proxies `/api/*` → `http://localhost:3000` (configured in `vite.config.ts`).
-- Elysia on :3000 handles API routes; in production also serves `dist/` via `@elysia/static` with `indexHTML: true`.
-- First time setup: `bun run db:migrate` to create tables. Or `bun packages/prelysia/cli/prelysia.ts init` for full scaffold (scaffolds files, runs `bun install`, then `drizzle-kit push`).
-- Add CRUD modules: `bun packages/prelysia/cli/prelysia.ts feat <kebab-name>` (interactive field prompts, generates all 6 server files + FE assets + updates index.ts + App.tsx). Use `--fe-only` to skip server-side generation.
-- `packages/prelysia/cli/` code is NOT typechecked by any tsconfig — run `bun packages/prelysia/cli/prelysia.ts` to verify.
-- `.env` vars: `PORT`, `DB_PATH`, `NODE_ENV` (auto-loaded by Bun, no dotenv). `.env.example` is unrelated cruft (ClickUp tokens), ignore it.
+Published to npm as **`prelysia-cli`** via OIDC — tag `prelysia-cli-v*` triggers `.github/workflows/publish.yml`. Only `cli/` dir is included in tarball (see `packages/prelysia/package.json` `"files"`). CLI code is NOT typechecked by any tsconfig — run `bun packages/prelysia/cli/prelysia.ts` to verify.
 
-## Key Conventions
+```bash
+bun packages/prelysia/cli/prelysia.ts init [project-name]  # scaffold full project
+bun packages/prelysia/cli/prelysia.ts feat <kebab-name>     # add CRUD module (interactive field prompts)
+bun packages/prelysia/cli/prelysia.ts feat <kebab-name> --fe-only  # skip server-side files
+bun packages/prelysia/cli/prelysia.ts remove <kebab-name>   # remove module + DB table
+```
 
-- `verbatimModuleSyntax: true` — use `import type` for type-only imports.
-- `drizzle-typebox` intermediate variable required: `const _x = createInsertSchema(...)`, then reference in `t.Omit(...)` to avoid infinite type instantiation.
-- Service is a factory function called in routes via `derive({ as: 'scoped' }, ({ db }) => ({ svc: createService(db) }))`.
-- All generated module routes use `BunSQLiteDatabase` type for db parameter.
-- Wouter routes use `href` prop, not `to`. Use `useLocation` for navigation, `useRoute` for path matching.
-- TanStack Query: `useQuery` + `useMutation` + `useQueryClient` from `@tanstack/preact-query`.
-- **`cn()` rule**: use `cn(...)` from `src/lib/utils.ts` for conditional class composition. Raw `class` is fine for static Stisla layout classes.
-- **Icon convention**: import from `@phosphor-icons/react` with `Icon` suffix (e.g. `SunIcon`, `MoonIcon`, `PlusIcon`, `TrashIcon`). `size={20}` standalone, `size={16}` inline with text.
-- **Tailwind + Stisla**: Stisla owns structural layout/components; Tailwind handles spacing, sizing, borders. Never use Tailwind to override Stisla component styles.
-- **Stisla CSS classes**: `.button` (variants: `--primary`, `--danger`, `--ghost`, `--soft`, `--neutral`, `--sm`), `.card` (`.card__header`, `__body`, `__footer`), `.page` (`.page__header`, `__body`, `__section`, `__headline`, `__title`, `__description`, `__actions`), `.table` (`.table--hover`, `--striped`), `.field`, `.input`.
-- `index.html` title is `Elysia + Preact` — update if you rename the project.
-- No `npm test`, `npm run lint`, or `npm run typecheck` exist. `bun run build` is the only verification command.
+### `init` creates (in generated project):
+- `server/data/` dir (mkdirSync before `bunx drizzle-kit push`)
+- `.env` (uncommented), `.env.example` (commented), `.gitignore`, `README.md` (from `templates/USER_README.md` with `{{projectName}}` interpolation)
+- Todos module, full FE scaffold, `vite.config.ts` proxy injection
+- Runs `bun install` then `bunx drizzle-kit push`
+
+### `feat` generates:
+- **Server**: 6 files at `server/modules/<name>/` — `schema.ts`, `types.ts`, `model.ts`, `service.ts`, `routes.ts`, `index.ts`
+- **FE**: `src/types/<name>.ts`, `src/api/<name>.ts`, `src/pages/<name>/List.tsx`, `src/pages/<name>/Form.tsx`
+- **Integration**: registers plugin in `server/index.ts`, re-export in `server/db/schema.ts`, updates `src/App.tsx` via marker comments:
+  - `// @prelysia-imports` (import insertion)
+  - `{/* @prelysia-sidebar */}` (sidebar link)
+  - `{/* @prelysia-routes */}` (Route components)
+  - **Never remove these markers** — `feat` validates they exist and refuses if missing.
+
+## Architecture Details
+
+- **Server modules**: 6-file pattern per domain — `schema.ts` (Drizzle table), `types.ts` (InferSelectModel/InsertModel), `model.ts` (drizzle-typebox → Elysia.t validation), `service.ts` (factory `(db) => ({...})`), `routes.ts` (Elysia routes), `index.ts` (Elysia plugin).
+- **DB decoration**: global Elysia decoration via `.decorate('db', drizzle(sqlite)).as('global')` in `server/plugins/db.ts` — every route handler gets `db` on context.
+- **`drizzle-typebox`**: intermediate variable required — `const _x = createInsertSchema(...)`, then reference in `t.Omit(...)` to avoid infinite type instantiation.
+- **Wouter**: routes use `href` prop, not `to`. `useLocation` for navigation, `useRoute` for path matching.
+- **Stisla page layout**: `.page > .page__header` (`.page__headline` > `.page__title` + `.page__description`; optional `.page__actions`) + `.page__body > .page__section > .card`.
+- **Theme**: `useTheme` hook sets `data-theme` on `<html>`, persisted to `localStorage` key `stisla-theme`. `index.html` has inline `<script>` reading localStorage before first paint — do not remove.
+- **ENV vars**: root `.env.example` (ClickUp tokens) is unrelated cruft. The generated project gets its own `.env`/`.env.example` with `PORT`, `DB_PATH`, `NODE_ENV`. Bun auto-loads `.env`, no dotenv needed. Default `DB_PATH` is `server/data/todos.db`.
+
+## Templates
+
+All CLI templates live under `packages/prelysia/cli/templates/`:
+- `project.ts` — 10 template functions for server files (`serverIndexTemplate`, `serverConfigTemplate`, `envExampleTemplate`, `envLocalTemplate`, `gitignoreTemplate`, etc.)
+- `module.ts` — 6 server file templates (used by `feat`)
+- `fe-*.ts` — frontend file templates
+- `USER_README.md` — physical Markdown file, read via `readFileSync` in `scaffold.ts`, placeholders interpolated with `.replace()`
+
+## Package Boundary
+
+Only `packages/prelysia/` is published to npm (as `prelysia-cli`). The root `package.json` is private (workspace container). When adding new files to the CLI tarball, update `"files"` in `packages/prelysia/package.json` and verify with `bun publish --dry-run`.
