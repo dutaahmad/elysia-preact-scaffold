@@ -16,6 +16,8 @@ dist-ssr
 *.db-wal
 *.db-shm
 drizzle/
+*.npmrc
+tarball/
 
 # OpenCode project config
 .opencode/node_modules

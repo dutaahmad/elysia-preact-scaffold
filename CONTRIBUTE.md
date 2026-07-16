@@ -30,19 +30,22 @@ elysia-preact-scaffold/
 ├── server/                 # scaffold backend (not published)
 ├── src/                    # scaffold frontend (not published)
 └── .github/workflows/
-    └── publish.yml         # auto-publish on tag push
+    └── publish.yml         # auto-publish on tag push via OIDC
 ```
 
 Only `packages/prelysia/` is published to npm. The root package (`elysia-preact-scaffold`) is private and contains all scaffold dependencies for development.
 
 ## Publishing `prelysia`
 
+### Trusted Publisher (OIDC)
+
+This repo uses [npm Trusted Publishing](https://docs.npmjs.com/trusted-publishers) via GitHub Actions OIDC — no long-lived tokens required.
+
 ### Prerequisites
 
 | Item | Check |
 |------|-------|
 | npm account | `npm whoami` — logged in with 2FA enabled |
-| npm token | `NPM_TOKEN` added to repo secrets for GitHub Actions |
 | Package name | Confirmed: `prelysia` is available on npm |
 | Clean git | `git status --porcelain` — no uncommitted changes |
 | Dry run | `bun publish --dry-run` — verify only `cli/` files are included |
@@ -79,12 +82,24 @@ git tag prelysia-v0.x.y
 git push origin main --tags
 ```
 
-### Manual Publish (without CI)
+### First-Time Setup
+
+Trusted publishing only works after the package exists on the registry. For the **first publish only**:
 
 ```bash
 cd packages/prelysia
-bun publish --access public
+npm publish --access public --otp=XXXXXX
+# Get OTP from your authenticator app
 ```
+
+Then configure the trusted publisher on [npmjs.com](https://www.npmjs.com/package/prelysia/settings):
+
+- Navigate to **Settings → Trusted Publisher → Add**
+- Provider: **GitHub Actions**
+- Org: `dutaahmad`, Repo: `elysia-preact-scaffold`, File: `publish.yml`
+- Allowed actions: `npm publish`
+
+After setup, also lock down the package under **Settings → Publishing access** → **"Require two-factor authentication and disallow tokens"**.
 
 ### Verification After Publish
 
@@ -99,11 +114,11 @@ bun install -g prelysia && prelysia --help  # smoke test global install
 
 File: `.github/workflows/publish.yml`
 
-Triggered on tag push `prelysia-v*`. Steps:
+Triggered on tag push `prelysia-v*`. Uses OIDC (no tokens):
 
 1. Checkout repo
-2. Setup Bun (`oven-sh/setup-bun`)
-3. `bun install`
-4. `bun publish --access public` (authenticated via `NPM_TOKEN`)
+2. Setup Bun — `bun install` dependencies
+3. Setup Node — `npm publish` handles OIDC auth
+4. Publish with provenance attestations (automatic for public repos)
 
-Before the first publish, add `NPM_TOKEN` to repo secrets.
+Automatic provenance links each publish to the exact commit and workflow run.

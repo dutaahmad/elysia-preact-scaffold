@@ -3,6 +3,10 @@
   "version": "0.1.0",
   "description": "Elysia + Preact fullstack scaffold CLI",
   "type": "module",
+  "scripts": {
+    "package": "bun pm pack --destination ./tarball",
+    "publish": "bun publish --auth-type web"
+  },
   "bin": {
     "prelysia": "./cli/prelysia.ts"
   },
@@ -26,5 +30,8 @@
   "repository": {
     "type": "git",
     "url": "https://github.com/dutaahmad/elysia-preact-scaffold"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }
