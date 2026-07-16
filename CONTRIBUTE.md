@@ -24,7 +24,7 @@ There is no linter, test framework, or typecheck command.
 elysia-preact-scaffold/
 ├── package.json            # root workspace config (private)
 ├── packages/
-│   └── prelysia/           # published to npm as "prelysia"
+│   └── prelysia/           # published to npm as "prelysia-cli"
 │       ├── package.json    # only 2 runtime deps: commander + @inquirer/prompts
 │       └── cli/            # CLI source code
 ├── server/                 # scaffold backend (not published)
@@ -35,7 +35,7 @@ elysia-preact-scaffold/
 
 Only `packages/prelysia/` is published to npm. The root package (`elysia-preact-scaffold`) is private and contains all scaffold dependencies for development.
 
-## Publishing `prelysia`
+## Publishing `prelysia-cli`
 
 ### Trusted Publisher (OIDC)
 
@@ -46,7 +46,7 @@ This repo uses [npm Trusted Publishing](https://docs.npmjs.com/trusted-publisher
 | Item | Check |
 |------|-------|
 | npm account | `npm whoami` — logged in with 2FA enabled |
-| Package name | Confirmed: `prelysia` is available on npm |
+| Package name | Confirmed: `prelysia-cli` is available on npm |
 | Clean git | `git status --porcelain` — no uncommitted changes |
 | Dry run | `bun publish --dry-run` — verify only `cli/` files are included |
 | Version sync | `bun run prelysia --version` matches `packages/prelysia/package.json` |
@@ -75,8 +75,8 @@ cd packages/prelysia && bun publish --dry-run  # inspect tarball contents
 
 # 3. Commit and tag
 git add -A
-git commit -m "chore: bump prelysia to v0.x.y"
-git tag prelysia-v0.x.y
+git commit -m "chore: bump prelysia-cli to v0.x.y"
+git tag prelysia-cli-v0.x.y
 
 # 4. Push — GitHub Actions publishes automatically
 git push origin main --tags
@@ -92,11 +92,12 @@ npm publish --access public --otp=XXXXXX
 # Get OTP from your authenticator app
 ```
 
-Then configure the trusted publisher on [npmjs.com](https://www.npmjs.com/package/prelysia/settings):
+Then configure the trusted publisher on [npmjs.com](https://www.npmjs.com/package/prelysia-cli/settings):
 
 - Navigate to **Settings → Trusted Publisher → Add**
 - Provider: **GitHub Actions**
-- Org: `dutaahmad`, Repo: `elysia-preact-scaffold`, File: `publish.yml`
+- Environment: *leave blank* (no environment restrictions)
+- Org: `dutaahmad`, Repo: `elysia-preact-scaffold`, Workflow: `publish.yml`
 - Allowed actions: `npm publish`
 
 After setup, also lock down the package under **Settings → Publishing access** → **"Require two-factor authentication and disallow tokens"**.
@@ -104,8 +105,8 @@ After setup, also lock down the package under **Settings → Publishing access**
 ### Verification After Publish
 
 ```bash
-npm view prelysia                  # confirm version on registry
-bun install -g prelysia && prelysia --help  # smoke test global install
+npm view prelysia-cli                  # confirm version on registry
+bun install -g prelysia-cli && prelysia --help  # smoke test global install
 ```
 
 ## GitHub Actions
@@ -114,7 +115,7 @@ bun install -g prelysia && prelysia --help  # smoke test global install
 
 File: `.github/workflows/publish.yml`
 
-Triggered on tag push `prelysia-v*`. Uses OIDC (no tokens):
+Triggered on tag push `prelysia-cli-v*`. Uses OIDC (no tokens):
 
 1. Checkout repo
 2. Setup Bun — `bun install` dependencies

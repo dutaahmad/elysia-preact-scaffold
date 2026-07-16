@@ -1,4 +1,4 @@
-# prelysia
+# prelysia-cli
 
 Elysia + Preact fullstack scaffold CLI.
 
@@ -9,7 +9,7 @@ Elysia + Preact fullstack scaffold CLI.
 ## Install
 
 ```bash
-bun install -g prelysia
+bun install -g prelysia-cli
 ```
 
 ## Usage

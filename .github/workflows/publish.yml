@@ -3,7 +3,7 @@ name: Publish prelysia
 on:
   push:
     tags:
-      - 'prelysia-v*'
+      - 'prelysia-cli-v*'
 
 permissions:
   id-token: write
