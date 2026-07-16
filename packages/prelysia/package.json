@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "package": "bun pm pack --destination ./tarball",
-    "publish": "bun publish --auth-type web"
+    "npm-publish": "bun publish"
   },
   "bin": {
     "prelysia": "./cli/prelysia.ts"
