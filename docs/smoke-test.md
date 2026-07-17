@@ -1,6 +1,6 @@
 # Smoke Test
 
-Manual verification checklist for the prelysia scaffold. Run after `bun cli/prelysia.ts init`, after upgrades, or when unsure if things still work.
+Manual verification checklist for the prelysia scaffold. Run after `bun packages/prelysia/cli/prelysia.ts init`, after upgrades, or when unsure if things still work.
 
 ## S: Scaffold
 
@@ -9,7 +9,7 @@ Manual verification checklist for the prelysia scaffold. Run after `bun cli/prel
 | S1 | Server files exist | `ls server/` | `config.ts`, `index.ts`, `plugins/db.ts`, `db/schema.ts`, `modules/todos/` present |
 | S2 | Todos module files | `ls server/modules/todos/` | `schema.ts`, `types.ts`, `model.ts`, `service.ts`, `routes.ts`, `index.ts` |
 | S3 | Frontend files exist | `ls src/` | `main.tsx`, `style.css`, `App.tsx`, `api/client.ts`, `hooks/useTheme.ts`, `components/ThemeToggle.tsx`, `lib/utils.ts`, `pages/Home.tsx` |
-| S4 | Config files | `ls .env drizzle.config.ts vite.config.ts` | All three exist |
+| S4 | Config files | `ls .env .env.example .gitignore README.md drizzle.config.ts vite.config.ts` | All six exist |
 | S5 | Build passes | `bun run build` | Exit 0, `dist/` produced |
 
 ## D: Dev Server

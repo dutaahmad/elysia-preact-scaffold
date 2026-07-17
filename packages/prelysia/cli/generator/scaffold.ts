@@ -121,6 +121,7 @@ export async function scaffoldProject(targetDir: string, projectName: string): P
       '@tanstack/preact-query': '^5.101.2',
       '@phosphor-icons/react': '^2.1.7',
       '@stisla/css': '^3.0.1',
+      '@stisla/style': '^3.0.1',
       '@stisla/vanilla': '^3.0.0',
       logixlysia: '^6.6.0',
     }
