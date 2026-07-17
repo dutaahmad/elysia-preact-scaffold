@@ -81,6 +81,48 @@ drizzle/
 `
 }
 
+export function indexHtmlTemplate(projectName: string): string {
+  return `<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>${projectName}</title>
+    <script>
+      (function () {
+        var theme = localStorage.getItem('stisla-theme')
+        if (!theme) theme = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
+        document.documentElement.dataset.theme = theme
+      })()
+    </script>
+  </head>
+  <body>
+    <div id="app"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>`
+}
+
+export function viteConfigTemplate(): string {
+  return `import tailwindcss from '@tailwindcss/vite'
+import { defineConfig } from 'vite'
+import preact from '@preact/preset-vite'
+
+export default defineConfig({
+  plugins: [tailwindcss(), preact()],
+  server: {
+    proxy: {
+      '/api': {
+        target: 'http://localhost:3000',
+        changeOrigin: true,
+      },
+    },
+  },
+})
+`
+}
+
 export function loggerPluginTemplate(): string {
   return `import logixlysia from 'logixlysia'
 import { config } from '../config'

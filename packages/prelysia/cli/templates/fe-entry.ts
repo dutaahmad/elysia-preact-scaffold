@@ -37,6 +37,7 @@ export function App() {
           <div class="navbar__nav">
             <ThemeToggle />
           </div>
+        </div>
       </nav>
       <div class="app-layout">
         <aside class="sidebar" id="sidebar" data-stisla-sidebar>

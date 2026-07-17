@@ -1,7 +1,7 @@
 import { mkdirSync, readFileSync } from 'fs'
 import { join, dirname } from 'path'
 import { fileURLToPath } from 'url'
-import { writeFileTree, writeJson, readJson, pathExists, readText, writeText } from '../utils/fs'
+import { writeFileTree, writeJson, readJson, pathExists } from '../utils/fs'
 import {
   serverIndexTemplate,
   serverConfigTemplate,
@@ -11,6 +11,8 @@ import {
   envExampleTemplate,
   envLocalTemplate,
   gitignoreTemplate,
+  indexHtmlTemplate,
+  viteConfigTemplate,
 } from '../templates/project'
 import { schemaTemplate } from '../templates/server-schema'
 import { typesTemplate } from '../templates/server-types'
@@ -34,6 +36,8 @@ export async function scaffoldProject(targetDir: string, projectName: string): P
     files['.env'] = envLocalTemplate()
     files['.env.example'] = envExampleTemplate()
     files['.gitignore'] = gitignoreTemplate()
+    files['index.html'] = indexHtmlTemplate(projectName)
+    files['vite.config.ts'] = viteConfigTemplate()
 
     const __filename = fileURLToPath(import.meta.url)
     const readmePath = join(dirname(__filename), '../templates/USER_README.md')
@@ -60,27 +64,6 @@ export async function scaffoldProject(targetDir: string, projectName: string): P
     files['src/App.tsx'] = feAppTemplate()
 
     await writeFileTree(targetDir, files)
-
-    const viteConfigPath = join(targetDir, 'vite.config.ts')
-    if (pathExists(viteConfigPath)) {
-      let viteContent = await readText(viteConfigPath)
-      if (!viteContent.includes('proxy')) {
-        viteContent = viteContent.replace(
-          /(plugins:\s*\[.*?\],)/,
-          `$1
-  server: {
-    proxy: {
-      '/api': {
-        target: 'http://localhost:3000',
-        changeOrigin: true,
-      },
-    },
-  },`,
-        )
-        await writeText(viteConfigPath, viteContent)
-      }
-      console.log('  \u2713 Updated vite.config.ts')
-    }
 
     const pkgPath = join(targetDir, 'package.json')
     let pkg: Record<string, unknown>
@@ -122,18 +105,24 @@ export async function scaffoldProject(targetDir: string, projectName: string): P
       '@phosphor-icons/react': '^2.1.7',
       '@stisla/css': '^3.0.1',
       '@stisla/style': '^3.0.1',
-      '@stisla/vanilla': '^3.0.0',
+      '@stisla/vanilla': '^3.0.2',
+      clsx: '^2.1.1',
       logixlysia: '^6.6.0',
+      preact: '^10.29.3',
+      'tailwind-merge': '^3.6.0',
     }
     pkg.dependencies = { ...deps, ...(pkg.dependencies as Record<string, string> || {}) }
 
     const devDeps: Record<string, string> = {
       '@libsql/client': '^0.17.4',
+      '@preact/preset-vite': '^2.10.5',
       '@tailwindcss/vite': '^4.1.7',
       'drizzle-kit': '^0.31.10',
       '@types/bun': '^1.3.14',
       concurrently: '^10.0.3',
       tailwindcss: '^4.1.7',
+      typescript: '~6.0.2',
+      vite: '^8.1.1',
     }
     pkg.devDependencies = { ...(pkg.devDependencies as Record<string, string> || {}), ...devDeps }
 
