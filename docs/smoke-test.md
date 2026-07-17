@@ -11,7 +11,7 @@ Manual verification checklist for the prelysia scaffold. Run after `bun packages
 | S1 | Server files exist | `ls server/` | — | `config.ts`, `index.ts`, `plugins/db.ts`, `db/schema.ts`, `modules/todos/` present |
 | S2 | Todos module files | `ls server/modules/todos/` | — | `schema.ts`, `types.ts`, `model.ts`, `service.ts`, `routes.ts`, `index.ts` |
 | S3 | Frontend files exist | `ls src/` | — | `main.tsx`, `style.css`, `App.tsx`, `api/client.ts`, `hooks/useTheme.ts`, `components/ThemeToggle.tsx`, `lib/utils.ts`, `pages/Home.tsx` |
-| S4 | Config files | `ls .env .env.example .gitignore README.md drizzle.config.ts vite.config.ts` | — | All six exist |
+| S4 | Config files | `ls .env .env.example .gitignore index.html README.md drizzle.config.ts vite.config.ts` | — | All seven exist |
 | S5 | Build passes | `bun run build` | — | Exit 0, `dist/` produced |
 
 ```bash
