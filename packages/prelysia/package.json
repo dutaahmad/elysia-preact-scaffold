@@ -1,6 +1,6 @@
 {
   "name": "prelysia-cli",
-  "version": "0.1.2",
+  "version": "0.1.4",
   "description": "Elysia + Preact fullstack scaffold CLI",
   "type": "module",
   "scripts": {
@@ -25,7 +25,13 @@
   "devDependencies": {
     "@types/bun": "^1.3.14"
   },
-  "keywords": ["elysia", "preact", "scaffold", "cli", "fullstack"],
+  "keywords": [
+    "elysia",
+    "preact",
+    "scaffold",
+    "cli",
+    "fullstack"
+  ],
   "license": "MIT",
   "repository": {
     "type": "git",

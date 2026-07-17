@@ -53,13 +53,6 @@ check_prereqs() {
   command -v bun >/dev/null 2>&1 || fail "bun is required but not installed"
   ok "bun found"
 
-  command -v npm >/dev/null 2>&1 || fail "npm is required but not installed"
-  ok "npm found"
-
-  local whoami
-  whoami=$(npm whoami 2>&1) || fail "Not logged into npm — run \`npm login\` first"
-  ok "npm logged in as ${whoami}"
-
   local dirty
   dirty=$(git status --porcelain 2>&1) || fail "Not a git repository"
   if [[ -n "$dirty" ]]; then
@@ -91,6 +84,11 @@ bump_version() {
     fail "Invalid version format — expected semver (e.g. 0.2.0)"
   fi
 
+  if [[ "$new_ver" == "$current" ]]; then
+    warn "Version unchanged (${current}) — skipping bump"
+    return
+  fi
+
   set_version "$new_ver"
 
   local bumped
@@ -115,7 +113,7 @@ sync_and_verify() {
   ok "bun install"
 
   local cli_ver
-  cli_ver=$(bun run prelysia --version 2>&1) || fail "prelysia --version failed"
+  cli_ver=$(bun run prelysia --version 2>&1 | tail -1) || fail "prelysia --version failed"
   if [[ "$cli_ver" != "$expected" ]]; then
     fail "CLI version mismatch — CLI reports ${cli_ver}, package.json has ${expected}"
   fi
@@ -144,6 +142,10 @@ commit_and_tag() {
   git add -A > /dev/null 2>&1
   local stats
   stats=$(git diff --cached --stat)
+  if [[ -z "$stats" ]]; then
+    warn "No changes to commit — version may be unchanged"
+    return
+  fi
   log "  Changes staged:"
   echo "$stats"
 
