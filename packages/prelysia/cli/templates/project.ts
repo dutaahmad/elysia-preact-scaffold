@@ -49,10 +49,35 @@ export default defineConfig({
 `
 }
 
-export function envTemplate(): string {
+export function envExampleTemplate(): string {
+  return `# Server
+PORT=3000
+
+# Database (SQLite file path, relative to project root)
+DB_PATH=server/data/app.db
+
+# Environment
+NODE_ENV=development
+`
+}
+
+export function envLocalTemplate(): string {
   return `PORT=3000
 DB_PATH=server/data/todos.db
 NODE_ENV=development
+`
+}
+
+export function gitignoreTemplate(): string {
+  return `node_modules
+dist
+.env
+*.db
+*.db-wal
+*.db-shm
+drizzle/
+*.local
+.DS_Store
 `
 }
 
@@ -77,9 +102,12 @@ export function dbPluginTemplate(): string {
   return `import { Elysia } from 'elysia'
 import { Database } from 'bun:sqlite'
 import { drizzle } from 'drizzle-orm/bun-sqlite'
+import { mkdirSync } from 'node:fs'
+import { dirname } from 'node:path'
 import type { BunSQLiteDatabase } from 'drizzle-orm/bun-sqlite'
 import { config } from '../config'
 
+mkdirSync(dirname(config.dbPath), { recursive: true })
 const sqlite = new Database(config.dbPath)
 sqlite.exec('PRAGMA journal_mode = WAL')
 

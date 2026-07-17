@@ -20,6 +20,9 @@ if (config.isProduction) {
       indexHTML: true,
     }),
   )
+
+  // SPA fallback for client-side routing (wouter)
+  app.get('*', () => Bun.file('dist/index.html').text())
 }
 
 app.listen(config.port, ({ hostname, port }) => {

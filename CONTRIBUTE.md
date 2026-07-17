@@ -123,3 +123,55 @@ Triggered on tag push `prelysia-cli-v*`. Uses OIDC (no tokens):
 4. Publish with provenance attestations (automatic for public repos)
 
 Automatic provenance links each publish to the exact commit and workflow run.
+
+## Troubleshooting
+
+### Publish succeeded in CI but npmjs.com shows old version
+
+The npm registry API and website may be out of sync due to CDN caching. The API is the source of truth.
+
+**Check the real state:**
+
+```bash
+# Latest dist-tag
+curl -s https://registry.npmjs.org/prelysia-cli | jq '.dist-tags'
+
+# All published versions
+curl -s https://registry.npmjs.org/prelysia-cli | jq '.versions | keys'
+```
+
+If the API shows your version but the website doesn't, **hard refresh** the browser (`Cmd+Shift+R` / `Ctrl+F5`). Wait up to 2 minutes for CDN propagation.
+
+### CI published but GitHub tag doesn't match package version
+
+The `version` field in `packages/prelysia/package.json` must equal the git tag suffix:
+
+```
+Tag:                prelysia-cli-v0.1.2
+package.json:       "version": "0.1.2"
+```
+
+Bump the version in `package.json` first, then commit, tag, and push.
+
+### CI fails with "ENEEDAUTH"
+
+npm CLI versions before 11 do not support OIDC trusted publishing. The workflow upgrades npm explicitly:
+
+```yaml
+- run: npm install -g npm@11
+```
+
+If the error persists, verify the trusted publisher is configured at `https://www.npmjs.com/package/prelysia-cli/settings`.
+
+### CI runs the wrong script instead of publishing
+
+A `"publish"` script in `package.json` overrides the `npm publish` command (npm lifecycle hooks). If one exists, rename it to something that doesn't conflict, like `"npm-publish"`.
+
+### CI fails with 404 when publishing
+
+This typically means the auth token used doesn't have publish permission for the package. With OIDC trusted publishing:
+
+1. Confirm the trusted publisher is configured on npmjs.com
+2. Ensure the workflow has `permissions: { id-token: write }`
+3. Remove any `NPM_TOKEN` or `NODE_AUTH_TOKEN` secrets from the repo — they override OIDC
+4. Run `npm install -g npm@11` before publishing (npm 10 lacks OIDC support)

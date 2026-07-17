@@ -24,6 +24,7 @@
     "@inquirer/prompts": "^8.5.2",
     "@phosphor-icons/react": "^2.1.7",
     "@stisla/css": "^3.0.1",
+    "@stisla/style": "^3.0.1",
     "@stisla/vanilla": "^3.0.2",
     "@tanstack/preact-query": "^5.101.2",
     "clsx": "^2.1.1",
