@@ -84,6 +84,11 @@ bump_version() {
     fail "Invalid version format — expected semver (e.g. 0.2.0)"
   fi
 
+  if [[ "$new_ver" == "$current" ]]; then
+    warn "Version unchanged (${current}) — skipping bump"
+    return
+  fi
+
   set_version "$new_ver"
 
   local bumped
@@ -137,6 +142,10 @@ commit_and_tag() {
   git add -A > /dev/null 2>&1
   local stats
   stats=$(git diff --cached --stat)
+  if [[ -z "$stats" ]]; then
+    warn "No changes to commit — version may be unchanged"
+    return
+  fi
   log "  Changes staged:"
   echo "$stats"
 
