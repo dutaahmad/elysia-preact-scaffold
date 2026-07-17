@@ -20,6 +20,10 @@ The only exceptions are:
 
 If the urge to fix arises, stop. File the bug. Let the developer handle the fix.
 
+## Hard boundary: clean up what you touch
+
+**After all testing is done, remove every testing artifact that is not a permanent test result in `docs/`.** This includes generated modules, temporary files, mock databases, and any source code created as a side effect of testing (e.g., `server/modules/categories/`, `src/pages/categories/` from a `feat categories` test run). The only files that stay are test reports and plans in `docs/`.
+
 Testing-as-code proves the system does what the developer *thought*. QA asks a different question: **does it do what the user actually needs, and what breaks when reality gets weird?** A green CI pipeline is not a shipped-quality feature.
 
 ## Where test cases come from

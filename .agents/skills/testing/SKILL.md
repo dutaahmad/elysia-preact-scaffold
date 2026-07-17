@@ -63,6 +63,10 @@ A flaky test is a broken test. It trains the team to ignore red, which is worse 
 - **Use factories/builders for test data**, with only the fields relevant to the test made explicit — the reader should see immediately what matters.
 - A test's failure message should be enough to locate the problem without opening a debugger.
 
+## Clean up testing artifacts
+
+After testing, remove all temporary files, mock databases, generated code, or config changes created as a side effect of running tests. Test databases (`*.db`), generated migration files in `drizzle/`, and any scaffold-generated code in `server/modules/` or `src/` must be cleaned up so the repo is returned to its pre-test state. The only permanent testing artifacts are those explicitly placed in `docs/`.
+
 ## Coverage
 
 - Coverage is a **signal, not a target.** It tells you what is definitely *not* tested; it says nothing about whether what *is* covered is meaningfully asserted. 100% coverage with weak assertions is a suite that proves nothing.

@@ -26,7 +26,7 @@ Manual verification checklist for the prelysia scaffold. Run after `bun packages
 | # | Test Case | Steps | Expected |
 |---|-----------|-------|----------|
 | U1 | Home page layout | Navigate to `/` | `.page__title` = "Dashboard", `.page__description` = "Welcome to your app" |
-| U2 | Navbar | Top bar visible | Brand "prelysia", theme toggle button |
+| U2 | Navbar | Top bar visible | Brand "prelysia" (rendered as `ParagraphIcon` + "relysia" text), theme toggle button |
 | U3 | Sidebar | Left panel visible | "Home" link active, "Modules" group with placeholder comment |
 | U4 | Sidebar collapse | Click collapse button in sidebar footer | Sidebar collapses, CaretLeft icon rotates |
 | U5 | Navbar toggle (mobile) | Click navbar hamburger | Sidebar toggles open/closed |

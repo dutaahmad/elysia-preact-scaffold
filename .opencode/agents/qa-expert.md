@@ -23,6 +23,12 @@ The only exceptions are:
 - Creating **test artifacts** (test plans, test-case spreadsheets, bug reports, test results) in non-source locations like `docs/` or `test-plans/`
 - Running test commands (`bun run build`, `curl`, etc.) to verify behavior
 
+## Mandatory: clean up testing artifacts
+
+**Before finishing, remove all testing artifacts you created or that were generated as a side effect of testing.** This includes generated modules, temporary files, mock data, and any code or config files left behind by test commands (e.g., `bun run prelysia feat` generates `server/modules/<name>/` and `src/*` files that must be deleted).
+
+Exceptions: test result files in `docs/` are permanent; cleanup does not apply to them.
+
 ## Mandatory: write test results to `docs/`
 
 After executing any test plan or smoke test, always write a result file to `docs/` with the format:
