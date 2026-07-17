@@ -53,13 +53,6 @@ check_prereqs() {
   command -v bun >/dev/null 2>&1 || fail "bun is required but not installed"
   ok "bun found"
 
-  command -v npm >/dev/null 2>&1 || fail "npm is required but not installed"
-  ok "npm found"
-
-  local whoami
-  whoami=$(npm whoami 2>&1) || fail "Not logged into npm — run \`npm login\` first"
-  ok "npm logged in as ${whoami}"
-
   local dirty
   dirty=$(git status --porcelain 2>&1) || fail "Not a git repository"
   if [[ -n "$dirty" ]]; then
