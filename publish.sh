@@ -108,7 +108,7 @@ sync_and_verify() {
   ok "bun install"
 
   local cli_ver
-  cli_ver=$(bun run prelysia --version 2>&1) || fail "prelysia --version failed"
+  cli_ver=$(bun run prelysia --version 2>&1 | tail -1) || fail "prelysia --version failed"
   if [[ "$cli_ver" != "$expected" ]]; then
     fail "CLI version mismatch — CLI reports ${cli_ver}, package.json has ${expected}"
   fi

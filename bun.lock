@@ -10,6 +10,7 @@
         "@inquirer/prompts": "^8.5.2",
         "@phosphor-icons/react": "^2.1.7",
         "@stisla/css": "^3.0.1",
+        "@stisla/style": "^3.0.1",
         "@stisla/vanilla": "^3.0.2",
         "@tanstack/preact-query": "^5.101.2",
         "clsx": "^2.1.1",
@@ -36,8 +37,8 @@
       },
     },
     "packages/prelysia": {
-      "name": "prelysia",
-      "version": "0.1.0",
+      "name": "prelysia-cli",
+      "version": "0.1.3",
       "bin": {
         "prelysia": "./cli/prelysia.ts",
       },
@@ -563,7 +564,7 @@
 
     "preact": ["preact@10.29.7", "", { "peerDependencies": { "preact-render-to-string": ">=5" }, "optionalPeers": ["preact-render-to-string"] }, "sha512-DCHYrK/B10yUD3ZjLfhZ3WIE/9Vf9VFUODcRE2dRomTYDpJk6z6L9wecSfhfE6M9ZTHUdyQkoC46arIDhEV84Q=="],
 
-    "prelysia": ["prelysia@workspace:packages/prelysia"],
+    "prelysia-cli": ["prelysia-cli@workspace:packages/prelysia"],
 
     "process-warning": ["process-warning@5.0.0", "", {}, "sha512-a39t9ApHNx2L4+HBnQKqxxHNs1r7KF+Intd8Q/g1bUh6q0WIp9voPXJ/x0j+ZL45KF1pJd9+q2jLIRMfvEshkA=="],
 
