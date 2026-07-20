@@ -12,9 +12,9 @@ export async function removeAction(
   const moduleName = toKebabCase(name)
 
   const serverPath = join(targetDir, 'server', 'modules', moduleName)
-  const feTypesPath = join(targetDir, 'src', 'types', `${moduleName}.ts`)
+  const feModulePath = join(targetDir, 'src', 'modules', moduleName)
 
-  if (!pathExists(serverPath) && !pathExists(feTypesPath)) {
+  if (!pathExists(serverPath) && !pathExists(feModulePath)) {
     console.error(`Error: Module "${moduleName}" not found.`)
     process.exit(1)
   }
