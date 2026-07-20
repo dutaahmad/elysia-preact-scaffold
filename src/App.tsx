@@ -1,9 +1,9 @@
 import { CaretLeftIcon, ParagraphIcon, ListIcon, CubeIcon } from '@phosphor-icons/react'
-import { cn } from './lib/utils'
+import { cn } from './shared/helpers/cn'
 import { QueryClient, QueryClientProvider } from '@tanstack/preact-query'
 import { Route, Switch, Link, useRoute } from 'wouter'
-import { Home } from './pages/Home'
-import { ThemeToggle } from './components/ThemeToggle'
+import { Home } from './modules/home'
+import { ThemeToggle } from './shared/components/ThemeToggle'
 // @prelysia-imports
 
 const queryClient = new QueryClient()
