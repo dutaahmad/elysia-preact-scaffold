@@ -151,7 +151,7 @@ export async function generateModule(
   basePath: string,
   moduleName: string,
   fields: FieldDef[],
-  options?: { feOnly?: boolean },
+  options?: { feOnly?: boolean; beOnly?: boolean },
 ): Promise<void> {
   try {
     const serverPath = join(basePath, 'server')
@@ -174,36 +174,36 @@ export async function generateModule(
       await updateDbSchema(serverPath, moduleName)
       await updateServerIndex(serverPath, moduleName, camelName)
 
-      console.log(`\nGenerated module: ${moduleName}`)
+      console.log(`\n${options?.beOnly ? 'Generated BE assets' : 'Generated module'}: ${moduleName}`)
       for (const [rel] of Object.entries(serverFiles)) {
         console.log(`  \u2713 ${join(serverPath, rel)}`)
       }
-    }
-
-    // FE files
-    const feFiles: Record<string, string> = {
-      [`src/types/${moduleName}.ts`]: feTypesTemplate(moduleName, fields),
-      [`src/api/${moduleName}.ts`]: feApiTemplate(moduleName, fields),
-      [`src/pages/${moduleName}/List.tsx`]: feListPageTemplate(moduleName, fields),
-      [`src/pages/${moduleName}/Create.tsx`]: feCreatePageTemplate(moduleName, fields),
-      [`src/pages/${moduleName}/Edit.tsx`]: feEditPageTemplate(moduleName, fields),
-      [`src/pages/${moduleName}/index.ts`]: fePagesBarrelTemplate(moduleName),
-    }
-    await writeFileTree(basePath, feFiles)
-
-    await updateAppFile(basePath, moduleName, pascalName)
-
-    if (options?.feOnly) {
-      console.log(`\nGenerated FE assets: ${moduleName}`)
-    }
-    for (const [rel] of Object.entries(feFiles)) {
-      console.log(`  \u2713 ${join(basePath, rel)}`)
-    }
-    if (!options?.feOnly) {
       console.log('  \u2713 Updated server/db/schema.ts')
       console.log('  \u2713 Updated server/index.ts')
     }
-    console.log('  \u2713 Updated src/App.tsx')
+
+    // FE files
+    if (!options?.beOnly) {
+      const feFiles: Record<string, string> = {
+        [`src/types/${moduleName}.ts`]: feTypesTemplate(moduleName, fields),
+        [`src/api/${moduleName}.ts`]: feApiTemplate(moduleName, fields),
+        [`src/pages/${moduleName}/List.tsx`]: feListPageTemplate(moduleName, fields),
+        [`src/pages/${moduleName}/Create.tsx`]: feCreatePageTemplate(moduleName, fields),
+        [`src/pages/${moduleName}/Edit.tsx`]: feEditPageTemplate(moduleName, fields),
+        [`src/pages/${moduleName}/index.ts`]: fePagesBarrelTemplate(moduleName),
+      }
+      await writeFileTree(basePath, feFiles)
+
+      await updateAppFile(basePath, moduleName, pascalName)
+
+      if (options?.feOnly) {
+        console.log(`\nGenerated FE assets: ${moduleName}`)
+      }
+      for (const [rel] of Object.entries(feFiles)) {
+        console.log(`  \u2713 ${join(basePath, rel)}`)
+      }
+      console.log('  \u2713 Updated src/App.tsx')
+    }
   } catch (err) {
     console.error('  \u2717 Module generation failed:', err instanceof Error ? err.message : err)
     process.exit(1)

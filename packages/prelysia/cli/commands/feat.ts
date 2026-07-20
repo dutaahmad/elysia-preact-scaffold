@@ -51,8 +51,13 @@ async function collectFields(): Promise<FieldDef[]> {
 
 export async function featAction(
   name: string,
-  options: { cwd?: string; feOnly?: boolean } = {},
+  options: { cwd?: string; feOnly?: boolean; beOnly?: boolean } = {},
 ): Promise<void> {
+  if (options.feOnly && options.beOnly) {
+    console.error('Error: --fe-only and --be-only cannot be used together.')
+    process.exit(1)
+  }
+
   const targetDir = options.cwd || process.cwd()
   const serverPath = join(targetDir, 'server')
 
@@ -63,24 +68,26 @@ export async function featAction(
     }
   }
 
-  const srcPath = join(targetDir, 'src')
-  if (!pathExists(srcPath)) {
-    console.error('Error: No src/ directory found. Run prelysia init first.')
-    process.exit(1)
-  }
-
-  const appPath = join(srcPath, 'App.tsx')
-  if (pathExists(appPath)) {
-    const content = await readText(appPath)
-    if (!content.includes('@prelysia-routes')) {
-      console.error('Error: src/App.tsx is missing FE foundation markers. Run prelysia init first.')
+  if (!options.beOnly) {
+    const srcPath = join(targetDir, 'src')
+    if (!pathExists(srcPath)) {
+      console.error('Error: No src/ directory found. Run prelysia init first.')
       process.exit(1)
     }
-  } else {
-    console.error('Error: No src/App.tsx found. Run prelysia init first.')
-    process.exit(1)
+
+    const appPath = join(srcPath, 'App.tsx')
+    if (pathExists(appPath)) {
+      const content = await readText(appPath)
+      if (!content.includes('@prelysia-routes')) {
+        console.error('Error: src/App.tsx is missing FE foundation markers. Run prelysia init first.')
+        process.exit(1)
+      }
+    } else {
+      console.error('Error: No src/App.tsx found. Run prelysia init first.')
+      process.exit(1)
+    }
   }
 
   const fields = await collectFields()
-  await generateModule(targetDir, name, fields, { feOnly: options.feOnly ?? false })
+  await generateModule(targetDir, name, fields, { feOnly: options.feOnly ?? false, beOnly: options.beOnly ?? false })
 }

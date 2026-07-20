@@ -38,6 +38,7 @@ program
   .description('Generate a new module with CRUD routes')
   .argument('<name>', 'Feature name (kebab-case)')
   .option('--fe-only', 'Only generate FE assets (types, api, pages)')
+  .option('--be-only', 'Only generate BE assets (server files, DB schema, routes)')
   .action(featAction)
 
 program

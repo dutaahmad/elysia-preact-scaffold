@@ -48,6 +48,7 @@ Published to npm as **`prelysia-cli`** via OIDC — tag `prelysia-cli-v*` trigge
 bun packages/prelysia/cli/prelysia.ts init [project-name]  # scaffold full project
 bun packages/prelysia/cli/prelysia.ts feat <kebab-name>     # add CRUD module (interactive field prompts)
 bun packages/prelysia/cli/prelysia.ts feat <kebab-name> --fe-only  # skip server-side files
+bun packages/prelysia/cli/prelysia.ts feat <kebab-name> --be-only  # skip frontend-side files
 bun packages/prelysia/cli/prelysia.ts remove <kebab-name>   # remove module + DB table
 ```
 

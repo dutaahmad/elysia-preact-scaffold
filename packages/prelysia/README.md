@@ -24,6 +24,9 @@ prelysia feat todos
 # Add frontend-only assets (skip server module)
 prelysia feat --fe-only widgets
 
+# Add backend-only module (skip frontend assets)
+prelysia feat --be-only widgets
+
 # Remove a module
 prelysia remove todos
 ```

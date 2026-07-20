@@ -46,6 +46,7 @@ The Vite dev server proxies `/api/*` requests to the Elysia backend automaticall
 | `bun run db:studio` | Open Drizzle Studio (database GUI) |
 | `prelysia feat <name>` | Generate a new CRUD module (server + client) |
 | `prelysia feat <name> --fe-only` | Generate only frontend assets for a module |
+| `prelysia feat <name> --be-only` | Generate only backend assets (server files + DB) |
 | `prelysia remove <name>` | Remove a module and its database table |
 
 ---
