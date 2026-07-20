@@ -315,7 +315,6 @@ export async function cleanupModule(
     console.log(`  \u2713 Removed server/modules/${moduleName}/`)
   }
 
-  // Remove FE module directory (contains types/, fetchers/, page.tsx, create/, edit/, index.ts)
   if (pathExists(feModulePath)) {
     removeDir(feModulePath)
     console.log(`  \u2713 Removed src/modules/${moduleName}/`)
