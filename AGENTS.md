@@ -12,7 +12,7 @@
 - **FE Routing/Data**: wouter (`Route`, `Switch`, `Link`, `useRoute`, `useLocation`) + `@tanstack/preact-query`
 - **Icons**: `@phosphor-icons/react` with `Icon` suffix, `size={20}` standalone, `size={16}` inline
 - **DB**: Bun SQLite + Drizzle ORM, `drizzle-typebox` for validation
-- **Class composition**: `clsx` + `tailwind-merge` via `cn()` from `src/lib/utils.ts`
+- **Class composition**: `clsx` + `tailwind-merge` via `cn()` from `src/shared/helpers/cn`
 - **TypeScript 6.0**, `erasableSyntaxOnly: true` — no enums, no parameter properties, no namespaces
 - **No linter, no test framework, no typecheck command.** `bun run build` is the only verification.
 
@@ -60,7 +60,7 @@ bun packages/prelysia/cli/prelysia.ts remove <kebab-name>   # remove module + DB
 
 ### `feat` generates:
 - **Server**: 6 files at `server/modules/<name>/` — `schema.ts`, `types.ts`, `model.ts`, `service.ts`, `routes.ts`, `index.ts`
-- **FE**: `src/types/<name>.ts`, `src/api/<name>.ts`, `src/pages/<name>/List.tsx`, `src/pages/<name>/Form.tsx`
+- **FE**: `src/modules/<name>/types/index.ts`, `src/modules/<name>/fetchers/index.ts`, `src/modules/<name>/page.tsx`, `src/modules/<name>/create/page.tsx`, `src/modules/<name>/edit/page.tsx`, `src/modules/<name>/index.ts`
 - **Integration**: registers plugin in `server/index.ts`, re-export in `server/db/schema.ts`, updates `src/App.tsx` via marker comments:
   - `// @prelysia-imports` (import insertion)
   - `{/* @prelysia-sidebar */}` (sidebar link)
@@ -76,6 +76,7 @@ bun packages/prelysia/cli/prelysia.ts remove <kebab-name>   # remove module + DB
 - **Stisla page layout**: `.page > .page__header` (`.page__headline` > `.page__title` + `.page__description`; optional `.page__actions`) + `.page__body > .page__section > .card`.
 - **Theme**: `useTheme` hook sets `data-theme` on `<html>`, persisted to `localStorage` key `stisla-theme`. `index.html` has inline `<script>` reading localStorage before first paint — do not remove.
 - **ENV vars**: root `.env.example` (ClickUp tokens) is unrelated cruft. The generated project gets its own `.env`/`.env.example` with `PORT`, `DB_PATH`, `NODE_ENV`. Bun auto-loads `.env`, no dotenv needed. Default `DB_PATH` is `server/data/todos.db`.
+- **FE structure**: `src/shared/` (cross-cutting: `helpers/cn/`, `hooks/useTheme/`, `components/ThemeToggle/`, `fetchers/client/`) + `src/modules/<name>/` (per-domain: `page.tsx`, `create/page.tsx`, `edit/page.tsx`, `types/index.ts`, `fetchers/index.ts`, `index.ts` barrel). `src/modules/home/` is the home page. Relative imports only — no `@/` aliases.
 
 ## Templates
 
