@@ -1,6 +1,6 @@
 import { join } from 'path'
 import { toKebabCase, toPascalCase } from '../utils/name'
-import { writeFileTree, readText, writeText, pathExists, removeDir, removeFile } from '../utils/fs'
+import { writeFileTree, readText, writeText, pathExists, removeDir } from '../utils/fs'
 import {
   schemaTemplate,
 } from '../templates/server-schema'
@@ -96,7 +96,7 @@ async function updateAppFile(basePath: string, moduleName: string, pascalName: s
 
   ensureCubeIconImport(lines)
 
-  const importLine = `import { ${pascalName}List, ${pascalName}Create, ${pascalName}Edit } from './pages/${moduleName}'`
+  const importLine = `import { ${pascalName}List, ${pascalName}Create, ${pascalName}Edit } from './modules/${moduleName}'`
 
   const sidebarItem = `                <SidebarLink href="/${moduleName}">
                   <CubeIcon size={20} /> {/* Icon: swap CubeIcon for a module-specific icon from @phosphor-icons/react */}
@@ -115,7 +115,7 @@ async function updateAppFile(basePath: string, moduleName: string, pascalName: s
 
   const importMarkerIdx = lines.findIndex((l) => l.includes('@prelysia-imports'))
   if (importMarkerIdx >= 0) {
-    const oldImportPattern = new RegExp(`^import \\{ [^}]*\\} from ['"].\\/pages\\/${moduleName}['"]$`)
+    const oldImportPattern = new RegExp(`^import \\{ [^}]*\\} from ['"].\\/modules\\/${moduleName}['"]$`)
     const oldImportIdx = lines.findIndex((l) => oldImportPattern.test(l.trim()))
     if (oldImportIdx >= 0) {
       lines.splice(oldImportIdx, 1)
@@ -185,12 +185,12 @@ export async function generateModule(
     // FE files
     if (!options?.beOnly) {
       const feFiles: Record<string, string> = {
-        [`src/types/${moduleName}.ts`]: feTypesTemplate(moduleName, fields),
-        [`src/api/${moduleName}.ts`]: feApiTemplate(moduleName, fields),
-        [`src/pages/${moduleName}/List.tsx`]: feListPageTemplate(moduleName, fields),
-        [`src/pages/${moduleName}/Create.tsx`]: feCreatePageTemplate(moduleName, fields),
-        [`src/pages/${moduleName}/Edit.tsx`]: feEditPageTemplate(moduleName, fields),
-        [`src/pages/${moduleName}/index.ts`]: fePagesBarrelTemplate(moduleName),
+        [`src/modules/${moduleName}/types/index.ts`]: feTypesTemplate(moduleName, fields),
+        [`src/modules/${moduleName}/fetchers/index.ts`]: feApiTemplate(moduleName, fields),
+        [`src/modules/${moduleName}/page.tsx`]: feListPageTemplate(moduleName, fields),
+        [`src/modules/${moduleName}/create/page.tsx`]: feCreatePageTemplate(moduleName, fields),
+        [`src/modules/${moduleName}/edit/page.tsx`]: feEditPageTemplate(moduleName, fields),
+        [`src/modules/${moduleName}/index.ts`]: fePagesBarrelTemplate(moduleName),
       }
       await writeFileTree(basePath, feFiles)
 
@@ -251,7 +251,7 @@ async function removeAppFileRefs(basePath: string, moduleName: string, pascalNam
   const content = await readText(appPath)
   const lines = content.split('\n')
 
-  const importPattern = new RegExp(`^import \\{ [^}]*\\} from ['"]./pages/${moduleName}['"]$`)
+  const importPattern = new RegExp(`^import \\{ [^}]*\\} from ['"]./modules/${moduleName}['"]$`)
   const sidebarOpenPattern = new RegExp(`^\\s*<SidebarLink href="/${moduleName}">`)
 
   const result: string[] = []
@@ -307,9 +307,7 @@ export async function cleanupModule(
   const pascalName = toPascalCase(moduleName)
 
   const serverModulePath = join(serverPath, 'modules', moduleName)
-  const feTypesPath = join(basePath, 'src', 'types', `${moduleName}.ts`)
-  const feApiPath = join(basePath, 'src', 'api', `${moduleName}.ts`)
-  const fePagesPath = join(basePath, 'src', 'pages', moduleName)
+  const feModulePath = join(basePath, 'src', 'modules', moduleName)
 
   // Remove server module directory
   if (pathExists(serverModulePath)) {
@@ -317,20 +315,9 @@ export async function cleanupModule(
     console.log(`  \u2713 Removed server/modules/${moduleName}/`)
   }
 
-  // Remove FE files
-  for (const [label, fp] of [
-    ['src/types', feTypesPath],
-    ['src/api', feApiPath],
-    ['src/pages', fePagesPath],
-  ] as const) {
-    if (pathExists(fp)) {
-      if (fp === fePagesPath) {
-        removeDir(fp)
-      } else {
-        removeFile(fp)
-      }
-      console.log(`  \u2713 Removed ${label}/${moduleName}`)
-    }
+  if (pathExists(feModulePath)) {
+    removeDir(feModulePath)
+    console.log(`  \u2713 Removed src/modules/${moduleName}/`)
   }
 
   // Update referencing files

@@ -20,7 +20,7 @@ import { modelTemplate } from '../templates/server-model'
 import { serviceTemplate } from '../templates/server-service'
 import { routesTemplate, indexTemplate } from '../templates/server-routes'
 import { feClientTemplate } from '../templates/fe-client'
-import { feAppTemplate, feMainTemplate, feHomeTemplate } from '../templates/fe-entry'
+import { feAppTemplate, feMainTemplate, feHomeTemplate, feHomeBarrelTemplate } from '../templates/fe-entry'
 import { feStyleTemplate, feUseThemeTemplate, feThemeToggleTemplate, feUtilsTemplate } from '../templates/fe-theme'
 
 export async function scaffoldProject(targetDir: string, projectName: string): Promise<void> {
@@ -56,11 +56,12 @@ export async function scaffoldProject(targetDir: string, projectName: string): P
 
     files['src/main.tsx'] = feMainTemplate()
     files['src/style.css'] = feStyleTemplate()
-    files['src/hooks/useTheme.ts'] = feUseThemeTemplate()
-    files['src/components/ThemeToggle.tsx'] = feThemeToggleTemplate()
-    files['src/lib/utils.ts'] = feUtilsTemplate()
-    files['src/api/client.ts'] = feClientTemplate()
-    files['src/pages/Home.tsx'] = feHomeTemplate()
+    files['src/shared/hooks/useTheme/index.ts'] = feUseThemeTemplate()
+    files['src/shared/components/ThemeToggle/index.tsx'] = feThemeToggleTemplate()
+    files['src/shared/helpers/cn/index.ts'] = feUtilsTemplate()
+    files['src/shared/fetchers/client/index.ts'] = feClientTemplate()
+    files['src/modules/home/page.tsx'] = feHomeTemplate()
+    files['src/modules/home/index.ts'] = feHomeBarrelTemplate()
     files['src/App.tsx'] = feAppTemplate()
 
     await writeFileTree(targetDir, files)

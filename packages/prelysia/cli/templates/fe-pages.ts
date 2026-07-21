@@ -11,8 +11,8 @@ export function feListPageTemplate(name: string, fields: FieldDef[]): string {
   return `import { PlusIcon, PencilIcon, TrashIcon } from '@phosphor-icons/react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/preact-query'
 import { Link } from 'wouter'
-import { ${camel}Api } from '../../api/${name}'
-import type { ${Pascal} } from '../../types/${name}'
+import { ${camel}Api } from './fetchers'
+import type { ${Pascal} } from './types'
 
 export function ${Pascal}List() {
   const queryClient = useQueryClient()
@@ -138,8 +138,8 @@ export function feCreatePageTemplate(name: string, fields: FieldDef[]): string {
 import { useState } from 'preact/hooks'
 import { useMutation, useQueryClient } from '@tanstack/preact-query'
 import { useLocation } from 'wouter'
-import { ${camel}Api } from '../../api/${name}'
-import type { Create${Pascal} } from '../../types/${name}'
+import { ${camel}Api } from '../fetchers'
+import type { Create${Pascal} } from '../types'
 
 export function ${Pascal}Create() {
   const [, navigate] = useLocation()
@@ -250,8 +250,8 @@ export function feEditPageTemplate(name: string, fields: FieldDef[]): string {
 import { useState, useEffect } from 'preact/hooks'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/preact-query'
 import { useRoute, useLocation } from 'wouter'
-import { ${camel}Api } from '../../api/${name}'
-import type { Create${Pascal} } from '../../types/${name}'
+import { ${camel}Api } from '../fetchers'
+import type { Create${Pascal} } from '../types'
 
 export function ${Pascal}Edit() {
   const [, params] = useRoute('/${name}/:id/edit')
@@ -320,8 +320,8 @@ ${formFields}
 
 export function fePagesBarrelTemplate(name: string): string {
   const Pascal = toPascalCase(name)
-  return `export { ${Pascal}List } from './List'
-export { ${Pascal}Create } from './Create'
-export { ${Pascal}Edit } from './Edit'
+  return `export { ${Pascal}List } from './page'
+export { ${Pascal}Create } from './create/page'
+export { ${Pascal}Edit } from './edit/page'
 `
 }

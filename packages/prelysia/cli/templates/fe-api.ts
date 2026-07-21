@@ -5,8 +5,8 @@ export function feApiTemplate(name: string, _fields: FieldDef[]): string {
   const Pascal = toPascalCase(name)
   const camel = toCamelCase(name)
 
-  return `import { api } from './client'
-import type { ${Pascal}, Create${Pascal}, Update${Pascal} } from '../types/${name}'
+  return `import { api } from '../../../shared/fetchers/client'
+import type { ${Pascal}, Create${Pascal}, Update${Pascal} } from '../types'
 
 export const ${camel}Api = {
   getAll: () => api.get<${Pascal}[]>('/api/${name}'),

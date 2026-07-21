@@ -1,11 +1,11 @@
 export function feAppTemplate(): string {
   return `import type { ComponentChildren } from 'preact'
 import { HouseIcon, CubeIcon, CaretLeftIcon, ListIcon } from '@phosphor-icons/react'
-import { cn } from './lib/utils'
+import { cn } from './shared/helpers/cn'
 import { QueryClient, QueryClientProvider } from '@tanstack/preact-query'
 import { Route, Switch, Link, useRoute } from 'wouter'
-import { Home } from './pages/Home'
-import { ThemeToggle } from './components/ThemeToggle'
+import { Home } from './modules/home'
+import { ThemeToggle } from './shared/components/ThemeToggle'
 // @prelysia-imports
 
 const queryClient = new QueryClient()
@@ -141,4 +141,8 @@ export function Home() {
   )
 }
 `
+}
+
+export function feHomeBarrelTemplate(): string {
+  return `export { Home } from './page'\n`
 }
